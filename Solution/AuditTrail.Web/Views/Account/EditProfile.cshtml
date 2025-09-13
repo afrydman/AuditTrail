@@ -1,0 +1,87 @@
+@using System.Security.Claims
+@{
+    ViewData["Title"] = "Editar Perfil";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="bi bi-person-gear me-2"></i>
+                    Editar Perfil de Usuario
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <form>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="firstName" class="form-label">Nombre</label>
+                                    <input type="text" class="form-control" id="firstName" value="@User.FindFirst("FirstName")?.Value" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="lastName" class="form-label">Apellido</label>
+                                    <input type="text" class="form-control" id="lastName" value="@User.FindFirst("LastName")?.Value" readonly>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Nombre de Usuario</label>
+                                <input type="text" class="form-control" id="username" value="@User.Identity.Name" readonly>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Correo Electrónico</label>
+                                <input type="email" class="form-control" id="email" value="@User.FindFirst(ClaimTypes.Email)?.Value" readonly>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Rol</label>
+                                <input type="text" class="form-control" id="role" value="@User.FindFirst(ClaimTypes.Role)?.Value" readonly>
+                            </div>
+                            
+                            <div class="alert alert-warning" role="alert">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Nota:</strong> La edición de perfiles será implementada en una futura actualización. Por motivos de seguridad y cumplimiento CFR 21 Parte 11, los cambios de perfil requieren aprobación administrativa.
+                            </div>
+                            
+                            <button type="button" class="btn btn-secondary" disabled>
+                                <i class="bi bi-pencil me-2"></i>
+                                Guardar Cambios (Próximamente)
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary text-white mx-auto mb-3" style="width: 80px; height: 80px;">
+                                <i class="bi bi-person-fill" style="font-size: 2rem;"></i>
+                            </div>
+                            <h5>@User.FindFirst("FirstName")?.Value @User.FindFirst("LastName")?.Value</h5>
+                            <p class="text-muted">@User.FindFirst(ClaimTypes.Role)?.Value</p>
+                            <p class="small text-secondary">@User.Identity.Name</p>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h6>Funciones Planificadas</h6>
+                            <ul class="list-unstyled small">
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Cambio de contraseña</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Actualización de información de contacto</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Preferencias de notificación</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Configuración de seguridad</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Foto de perfil</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

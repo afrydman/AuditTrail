@@ -1,184 +1,161 @@
 @model LoginViewModel
 @{
     Layout = null; // Use no layout for login page
+    var cacheBuster = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Login - AuditTrail System</title>
+    <title>Iniciar Sesión - Sistema AuditTrail</title>
     
     <!-- Meta -->
-    <meta name="description" content="CFR 21 Part 11 Compliant Audit Trail System" />
-    <meta name="author" content="AuditTrail System" />
+    <meta name="description" content="Sistema de Auditoría Conforme CFR 21 Parte 11" />
+    <meta name="author" content="Sistema AuditTrail" />
     <link rel="shortcut icon" href="~/images/favicon.svg" />
 
     <!-- CSS Files -->
-    <link rel="stylesheet" href="~/fonts/bootstrap/bootstrap-icons.css" />
-    <link rel="stylesheet" href="~/css/main.min.css" />
-    <style>
-        .login-container {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-        .login-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('~/images/pattern.jpg') repeat;
-            opacity: 0.1;
-            z-index: 1;
-        }
-        .login-card {
-            position: relative;
-            z-index: 2;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            max-width: 450px;
-            width: 100%;
-            margin: 20px;
-        }
-        .login-header {
-            background: linear-gradient(135deg, #0073d8 0%, #005bb5 100%);
-            color: white;
-            padding: 2rem;
-            text-align: center;
-        }
-        .login-body {
-            padding: 2rem;
-        }
-        .form-floating {
-            margin-bottom: 1rem;
-        }
-        .btn-login {
-            background: linear-gradient(135deg, #0073d8 0%, #005bb5 100%);
-            border: none;
-            border-radius: 50px;
-            padding: 12px 30px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-        }
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 115, 216, 0.3);
-        }
-        .compliance-badge {
-            background: rgba(0, 115, 216, 0.1);
-            border: 1px solid rgba(0, 115, 216, 0.2);
-            border-radius: 50px;
-            padding: 5px 15px;
-            font-size: 12px;
-            color: #0073d8;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="~/fonts/bootstrap/bootstrap-icons.css?v=@cacheBuster" />
+    <link rel="stylesheet" href="~/css/main.min.css?v=@cacheBuster" />
+    <link rel="stylesheet" href="~/css/login.css?v=@cacheBuster" />
 </head>
 <body>
     <div class="login-container">
         <div class="login-card">
-            <!-- Login Header -->
-            <div class="login-header">
-                <div class="d-flex align-items-center justify-content-center mb-3">
-                    <img src="~/images/audittrail-logo-sm.svg" alt="AuditTrail System" style="width: 60px; height: 60px;">
+            <!-- Information Panel (Left Side) -->
+            <div class="info-panel">
+                <div class="info-content">
+                    <!-- Logo -->
+                    <div class="brand-logo">
+                        <img src="~/images/audittrail-logo-sm.svg" alt="Sistema AuditTrail" style="width: 50px; height: 50px; filter: brightness(0) invert(1);">
+                    </div>
+                    
+                    <!-- Main Title -->
+                    <h2 class="mb-4 fw-bold">Sistema AuditTrail</h2>
+                    <p class="fs-5 mb-4 opacity-90">Plataforma de Gestión de Documentos Conforme CFR 21 Parte 11</p>
+                    
+                    <!-- Compliance Badge -->
+                    <div class="mb-4">
+                        <span class="badge" style="background: rgba(255,255,255,0.2); color: white; padding: 0.7rem 1.2rem; border-radius: 20px; font-size: 0.9rem;">
+                            <i class="bi bi-shield-check me-2"></i>
+                            Certificado FDA CFR 21 Parte 11
+                        </span>
+                    </div>
+                    
+                    <!-- Features List -->
+                    <ul class="feature-list">
+                        <li class="d-flex align-items-center">
+                            <div class="feature-icon">
+                                <i class="bi bi-shield-lock text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Acceso Seguro</h6>
+                                <small class="opacity-75">Autenticación robusta con registro completo de auditoría</small>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-center">
+                            <div class="feature-icon">
+                                <i class="bi bi-journal-text text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Registro de Auditoría</h6>
+                                <small class="opacity-75">Trazabilidad completa de todas las actividades del sistema</small>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-center">
+                            <div class="feature-icon">
+                                <i class="bi bi-file-earmark-check text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Control de Documentos</h6>
+                                <small class="opacity-75">Gestión de versiones y control de acceso granular</small>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-center">
+                            <div class="feature-icon">
+                                <i class="bi bi-graph-up text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Reportes de Cumplimiento</h6>
+                                <small class="opacity-75">Generación automática de reportes regulatorios</small>
+                            </div>
+                        </li>
+                    </ul>
+                    
+                    <!-- Footer Info -->
+                    <div class="mt-5">
+                        <small class="opacity-75">
+                            <i class="bi bi-building me-2"></i>
+                            Diseñado para la industria farmacéutica y de investigación clínica
+                        </small>
+                    </div>
                 </div>
-                <h3 class="mb-1 fw-bold">AuditTrail System</h3>
-                <p class="mb-0 opacity-75">CFR 21 Part 11 Compliant Document Management</p>
             </div>
-
-            <!-- Login Body -->
-            <div class="login-body">
-                <div class="text-center">
-                    <div class="compliance-badge">
-                        <i class="bi bi-shield-check me-1"></i>
-                        FDA CFR 21 Part 11 Compliant
+            
+            <!-- Login Form Panel (Right Side) -->
+            <div class="login-panel">
+                <div class="login-form">
+                    <div class="text-center mb-4">
+                        <h3 class="fw-bold text-dark">Iniciar Sesión</h3>
+                        <p class="text-muted">Accede a tu cuenta para continuar</p>
                     </div>
-                </div>
-
-                <form asp-action="Login" method="post" class="needs-validation" novalidate>
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
-
-                    <!-- Username Field -->
-                    <div class="form-floating">
-                        <input asp-for="Username" class="form-control" id="username" placeholder="Username" required>
-                        <label for="username">
-                            <i class="bi bi-person me-2"></i>Username
-                        </label>
-                        <span asp-validation-for="Username" class="text-danger"></span>
+                    
+                    <div class="compliance-badge text-center d-block">
+                        <i class="bi bi-shield-check me-2"></i>
+                        Sesión Segura CFR 21 Parte 11
                     </div>
 
-                    <!-- Password Field -->
-                    <div class="form-floating position-relative">
-                        <input asp-for="Password" type="password" class="form-control pe-5" id="password" placeholder="Password" required>
-                        <label for="password">
-                            <i class="bi bi-lock me-2"></i>Password
-                        </label>
-                        <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y pe-3 border-0 bg-transparent" 
-                                id="togglePassword" style="z-index: 10;">
-                            <i class="bi bi-eye" id="toggleIcon"></i>
-                        </button>
-                        <span asp-validation-for="Password" class="text-danger"></span>
-                    </div>
+                    <form asp-action="Login" method="post" class="needs-validation" novalidate>
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                    <!-- Remember Me -->
-                    <div class="form-check mb-3">
-                        <input asp-for="RememberMe" class="form-check-input" type="checkbox" id="rememberMe">
-                        <label class="form-check-label" for="rememberMe">
-                            Remember me on this device
-                        </label>
-                    </div>
-
-                    <!-- Login Button -->
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-login">
-                            <i class="bi bi-box-arrow-in-right me-2"></i>
-                            Sign In
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Security Notice -->
-                <div class="mt-4 text-center">
-                    <small class="text-muted">
-                        <i class="bi bi-info-circle me-1"></i>
-                        This system maintains complete audit trails of all user activities as required by FDA regulations.
-                    </small>
-                </div>
-
-                <!-- System Features -->
-                <div class="mt-4">
-                    <div class="row text-center">
-                        <div class="col-4">
-                            <div class="feature-item">
-                                <i class="bi bi-shield-lock text-primary fs-4"></i>
-                                <div class="small mt-2 text-muted">Secure Access</div>
-                            </div>
+                        <!-- Username Field -->
+                        <div class="form-floating">
+                            <input asp-for="Username" class="form-control" id="username" placeholder="Usuario" required>
+                            <label for="username">
+                                <i class="bi bi-person me-2"></i>Usuario
+                            </label>
+                            <span asp-validation-for="Username" class="text-danger"></span>
                         </div>
-                        <div class="col-4">
-                            <div class="feature-item">
-                                <i class="bi bi-journal-text text-primary fs-4"></i>
-                                <div class="small mt-2 text-muted">Audit Trail</div>
-                            </div>
+
+                        <!-- Password Field -->
+                        <div class="form-floating position-relative">
+                            <input asp-for="Password" type="password" class="form-control pe-5" id="password" placeholder="Contraseña" required>
+                            <label for="password">
+                                <i class="bi bi-lock me-2"></i>Contraseña
+                            </label>
+                            <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y pe-3 border-0 bg-transparent" 
+                                    id="togglePassword" style="z-index: 10;">
+                                <i class="bi bi-eye" id="toggleIcon"></i>
+                            </button>
+                            <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
-                        <div class="col-4">
-                            <div class="feature-item">
-                                <i class="bi bi-file-earmark-check text-primary fs-4"></i>
-                                <div class="small mt-2 text-muted">Document Control</div>
-                            </div>
+
+                        <!-- Login Button -->
+                        <div class="d-grid mb-4">
+                            <button type="submit" class="btn btn-primary btn-login">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>
+                                Iniciar Sesión
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Security Notice -->
+                    <div class="text-center">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Todas las actividades de sesión son registradas para cumplimiento regulatorio.
+                        </small>
+                    </div>
+                    
+                    <!-- Help Info -->
+                    <div class="mt-4 p-3 bg-light rounded-3">
+                        <div class="text-center">
+                            <small class="text-muted">
+                                <strong>¿Necesitas ayuda?</strong><br>
+                                Contacta al administrador del sistema para soporte técnico
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -187,44 +164,8 @@
     </div>
 
     <!-- Scripts -->
-    <script src="~/js/jquery.min.js"></script>
-    <script src="~/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Form validation
-        (function() {
-            'use strict';
-            window.addEventListener('load', function() {
-                var forms = document.getElementsByClassName('needs-validation');
-                var validation = Array.prototype.filter.call(forms, function(form) {
-                    form.addEventListener('submit', function(event) {
-                        if (form.checkValidity() === false) {
-                            event.preventDefault();
-                            event.stopPropagation();
-                        }
-                        form.classList.add('was-validated');
-                    }, false);
-                });
-            }, false);
-        })();
-
-        // Auto-focus username field
-        document.getElementById('username').focus();
-
-        // Toggle password visibility
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const passwordField = document.getElementById('password');
-            const toggleIcon = document.getElementById('toggleIcon');
-            
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                toggleIcon.classList.remove('bi-eye');
-                toggleIcon.classList.add('bi-eye-slash');
-            } else {
-                passwordField.type = 'password';
-                toggleIcon.classList.remove('bi-eye-slash');
-                toggleIcon.classList.add('bi-eye');
-            }
-        });
-    </script>
+    <script src="~/js/jquery.min.js?v=@cacheBuster"></script>
+    <script src="~/js/bootstrap.bundle.min.js?v=@cacheBuster"></script>
+    <script src="~/js/login.js?v=@cacheBuster"></script>
 </body>
 </html>

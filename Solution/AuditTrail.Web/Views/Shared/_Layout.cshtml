@@ -1,9 +1,12 @@
+@{
+    var cacheBuster = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"] - AuditTrail System</title>
+    <title>@ViewData["Title"] - Sistema AuditTrail</title>
     
     <!-- Meta -->
     <meta name="description" content="CFR 21 Part 11 Compliant Audit Trail System" />
@@ -11,9 +14,9 @@
     <link rel="shortcut icon" href="~/images/favicon.svg" />
 
     <!-- CSS Files -->
-    <link rel="stylesheet" href="~/fonts/bootstrap/bootstrap-icons.css" />
-    <link rel="stylesheet" href="~/css/main.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/fonts/bootstrap/bootstrap-icons.css?v=@cacheBuster" />
+    <link rel="stylesheet" href="~/css/main.min.css?v=@cacheBuster" />
+    <link rel="stylesheet" href="~/css/site.css?v=@cacheBuster" />
     
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -57,16 +60,16 @@
                             <span class="count-label"></span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end shadow-lg">
-                            <h5 class="fw-semibold px-3 py-2 text-primary">Notifications</h5>
+                            <h5 class="fw-semibold px-3 py-2 text-primary">Notificaciones</h5>
                             <div class="dropdown-item">
                                 <div class="d-flex py-2">
                                     <div class="icon-box md bg-info rounded-circle me-3">
                                         <i class="bi bi-file-earmark text-white"></i>
                                     </div>
                                     <div class="m-0">
-                                        <h6 class="mb-1 fw-semibold">Document uploaded</h6>
-                                        <p class="mb-1 text-secondary">New protocol version available</p>
-                                        <p class="small m-0 text-secondary">2 minutes ago</p>
+                                        <h6 class="mb-1 fw-semibold">Documento cargado</h6>
+                                        <p class="mb-1 text-secondary">Nueva versión de protocolo disponible</p>
+                                        <p class="small m-0 text-secondary">Hace 2 minutos</p>
                                     </div>
                                 </div>
                             </div>
@@ -78,7 +81,9 @@
                 <div class="dropdown ms-2">
                     <a id="userSettings" class="dropdown-toggle d-flex py-2 align-items-center text-decoration-none"
                        href="#!" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="~/images/user.png" class="rounded-2 img-3x" alt="User Profile" />
+                        <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary text-white" style="width: 36px; height: 36px;">
+                            <i class="bi bi-person-fill fs-5"></i>
+                        </div>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <div class="ms-2 text-truncate d-lg-block d-none">
@@ -92,35 +97,29 @@
                     <div class="dropdown-menu dropdown-menu-end shadow-lg">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <div class="dropdown-item">
-                                <div class="d-flex align-items-center">
-                                    <img src="~/images/user.png" class="rounded-2 img-3x me-3" alt="User Profile" />
-                                    <div>
-                                        <h6 class="mb-0">@User.FindFirst("FirstName")?.Value @User.FindFirst("LastName")?.Value</h6>
-                                        <p class="m-0 small text-secondary">@User.Identity.Name</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item d-flex align-items-center" href="@Url.Action("Profile", "Account")">
-                                <i class="bi bi-person me-3"></i>
-                                Profile
+                            <a class="dropdown-item d-flex align-items-center" href="@Url.Action("SessionActivity", "Account")">
+                                <i class="bi bi-clock-history me-3"></i>
+                                Registro de Actividad de Sesión
                             </a>
-                            <a class="dropdown-item d-flex align-items-center" href="@Url.Action("Settings", "Account")">
-                                <i class="bi bi-gear me-3"></i>
-                                Settings
+                            <a class="dropdown-item d-flex align-items-center" href="@Url.Action("EditProfile", "Account")">
+                                <i class="bi bi-person-gear me-3"></i>
+                                Editar Perfil
+                            </a>
+                            <a class="dropdown-item d-flex align-items-center" href="@Url.Action("EmailNotifications", "Account")">
+                                <i class="bi bi-envelope-at me-3"></i>
+                                Notificaciones por Email
                             </a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item d-flex align-items-center" href="@Url.Action("Logout", "Account")">
-                                <i class="bi bi-power me-3"></i>
-                                Logout
+                                <i class="bi bi-box-arrow-right me-3"></i>
+                                Cerrar Sesión
                             </a>
                         }
                         else
                         {
                             <a class="dropdown-item d-flex align-items-center" href="@Url.Action("Login", "Account")">
                                 <i class="bi bi-box-arrow-in-right me-3"></i>
-                                Login
+                                Iniciar Sesión
                             </a>
                         }
                     </div>
@@ -148,50 +147,50 @@
                                 <li>
                                     <a href="@Url.Action("Index", "Dashboard")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "current-page" : "")">
                                         <i class="bi bi-house"></i>
-                                        <span class="menu-text">Dashboard</span>
+                                        <span class="menu-text">Panel de Control</span>
                                     </a>
                                 </li>
                                 <li class="sidebar-dropdown">
                                     <a href="#" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Files" ? "current-page" : "")">
                                         <i class="bi bi-folder"></i>
-                                        <span class="menu-text">Document Management</span>
+                                        <span class="menu-text">Gestión de Documentos</span>
                                     </a>
                                     <div class="sidebar-submenu">
                                         <ul>
-                                            <li><a href="@Url.Action("Index", "Files")">Browse Files</a></li>
-                                            <li><a href="@Url.Action("Upload", "Files")">Upload Documents</a></li>
-                                            <li><a href="@Url.Action("Categories", "Files")">Manage Folders</a></li>
+                                            <li><a href="@Url.Action("Index", "Files")">Explorar Archivos</a></li>
+                                            <li><a href="@Url.Action("Upload", "Files")">Cargar Documentos</a></li>
+                                            <li><a href="@Url.Action("Categories", "Files")">Administrar Carpetas</a></li>
                                         </ul>
                                     </div>
                                 </li>
                                 <li>
                                     <a href="@Url.Action("Index", "Audit")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Audit" ? "current-page" : "")">
                                         <i class="bi bi-journal-text"></i>
-                                        <span class="menu-text">Audit Trail</span>
+                                        <span class="menu-text">Registro de Auditoría</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a href="@Url.Action("Index", "Users")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Users" ? "current-page" : "")">
                                         <i class="bi bi-people"></i>
-                                        <span class="menu-text">User Management</span>
+                                        <span class="menu-text">Gestión de Usuarios</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a href="@Url.Action("Index", "Permissions")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Permissions" ? "current-page" : "")">
                                         <i class="bi bi-shield-lock"></i>
-                                        <span class="menu-text">Permissions</span>
+                                        <span class="menu-text">Permisos</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a href="@Url.Action("Index", "Reports")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" ? "current-page" : "")">
                                         <i class="bi bi-graph-up"></i>
-                                        <span class="menu-text">Reports</span>
+                                        <span class="menu-text">Reportes</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a href="@Url.Action("Index", "Settings")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Settings" ? "current-page" : "")">
                                         <i class="bi bi-gear"></i>
-                                        <span class="menu-text">System Settings</span>
+                                        <span class="menu-text">Configuración del Sistema</span>
                                     </a>
                                 </li>
                             </ul>
@@ -221,7 +220,7 @@
                         <ol class="breadcrumb d-md-flex d-none">
                             <li class="breadcrumb-item">
                                 <i class="bi bi-house"></i>
-                                <a href="@Url.Action("Index", "Dashboard")">Home</a>
+                                <a href="@Url.Action("Index", "Dashboard")">Inicio</a>
                             </li>
                             @if (ViewData["Breadcrumb"] != null)
                             {
@@ -269,14 +268,14 @@
     <!-- Page wrapper end -->
 
     <!-- Required jQuery first, then Bootstrap Bundle JS -->
-    <script src="~/js/jquery.min.js"></script>
-    <script src="~/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/modernizr.js"></script>
-    <script src="~/js/moment.min.js"></script>
+    <script src="~/js/jquery.min.js?v=@cacheBuster"></script>
+    <script src="~/js/bootstrap.bundle.min.js?v=@cacheBuster"></script>
+    <script src="~/js/modernizr.js?v=@cacheBuster"></script>
+    <script src="~/js/moment.min.js?v=@cacheBuster"></script>
 
     <!-- Custom JS Files -->
-    <script src="~/js/custom.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/custom.js?v=@cacheBuster"></script>
+    <script src="~/js/site.js?v=@cacheBuster"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

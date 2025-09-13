@@ -125,9 +125,20 @@ public class AccountController : Controller
         return View(model);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Logout()
+    {
+        return await LogoutInternal();
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Logout()
+    public async Task<IActionResult> LogoutPost()
+    {
+        return await LogoutInternal();
+    }
+
+    private async Task<IActionResult> LogoutInternal()
     {
         try
         {
@@ -165,6 +176,27 @@ public class AccountController : Controller
     [HttpGet]
     public IActionResult AccessDenied()
     {
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult SessionActivity()
+    {
+        ViewData["Title"] = "Registro de Actividad de Sesión";
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult EditProfile()
+    {
+        ViewData["Title"] = "Editar Perfil";
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult EmailNotifications()
+    {
+        ViewData["Title"] = "Notificaciones por Email";
         return View();
     }
 

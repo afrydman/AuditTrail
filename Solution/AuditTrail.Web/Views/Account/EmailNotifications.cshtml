@@ -1,0 +1,130 @@
+@using System.Security.Claims
+@{
+    ViewData["Title"] = "Notificaciones por Email";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="bi bi-envelope-at me-2"></i>
+                    Configuración de Notificaciones por Email
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Próximamente:</strong> Esta página permitirá configurar las preferencias de notificaciones por correo electrónico para diferentes tipos de eventos del sistema.
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-8">
+                        <form>
+                            <h6 class="mb-3">Tipos de Notificaciones Planificadas</h6>
+                            
+                            <div class="mb-4">
+                                <h6 class="text-primary">Eventos de Seguridad</h6>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="loginFailures" disabled>
+                                    <label class="form-check-label" for="loginFailures">
+                                        Intentos de inicio de sesión fallidos
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="accountLocked" disabled>
+                                    <label class="form-check-label" for="accountLocked">
+                                        Bloqueo de cuenta
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="passwordChanges" disabled>
+                                    <label class="form-check-label" for="passwordChanges">
+                                        Cambios de contraseña
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="text-primary">Actividad de Documentos</h6>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="fileUploaded" disabled>
+                                    <label class="form-check-label" for="fileUploaded">
+                                        Nuevo documento cargado en mis carpetas
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="fileModified" disabled>
+                                    <label class="form-check-label" for="fileModified">
+                                        Documentos modificados que requieren mi revisión
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="approvalRequired" disabled>
+                                    <label class="form-check-label" for="approvalRequired">
+                                        Documentos pendientes de aprobación
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="text-primary">Sistema y Mantenimiento</h6>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="systemMaintenance" disabled>
+                                    <label class="form-check-label" for="systemMaintenance">
+                                        Mantenimiento programado del sistema
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="backupReports" disabled>
+                                    <label class="form-check-label" for="backupReports">
+                                        Reportes de respaldo y auditoría
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="emailAddress" class="form-label">Dirección de Correo Electrónico</label>
+                                <input type="email" class="form-control" id="emailAddress" value="@User.FindFirst(ClaimTypes.Email)?.Value" readonly>
+                            </div>
+                            
+                            <button type="button" class="btn btn-secondary" disabled>
+                                <i class="bi bi-envelope-check me-2"></i>
+                                Guardar Preferencias (Próximamente)
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-lightbulb text-warning me-2"></i>
+                                    Información
+                                </h6>
+                                <p class="card-text small">
+                                    Las notificaciones por email son parte del sistema de cumplimiento CFR 21 Parte 11 
+                                    y ayudan a mantener la trazabilidad de eventos críticos.
+                                </p>
+                                <hr>
+                                <h6>Características Planificadas:</h6>
+                                <ul class="list-unstyled small">
+                                    <li><i class="bi bi-check-circle text-success me-1"></i> Plantillas HTML personalizadas</li>
+                                    <li><i class="bi bi-check-circle text-success me-1"></i> Frecuencia configurable</li>
+                                    <li><i class="bi bi-check-circle text-success me-1"></i> Resúmenes diarios/semanales</li>
+                                    <li><i class="bi bi-check-circle text-success me-1"></i> Filtros por categoría</li>
+                                    <li><i class="bi bi-check-circle text-success me-1"></i> Integración SMTP segura</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

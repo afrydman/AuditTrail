@@ -1,0 +1,56 @@
+@{
+    ViewData["Title"] = "Registro de Actividad de Sesión";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="bi bi-clock-history me-2"></i>
+                    Registro de Actividad de Sesión
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Próximamente:</strong> Esta página mostrará el historial detallado de sus actividades de sesión, incluyendo inicios de sesión, acciones realizadas y registros de auditoría.
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Información de Sesión Actual</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Usuario:</strong></td>
+                                <td>@User.Identity.Name</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Nombre Completo:</strong></td>
+                                <td>@User.FindFirst("FirstName")?.Value @User.FindFirst("LastName")?.Value</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Sesión Iniciada:</strong></td>
+                                <td>@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                            <tr>
+                                <td><strong>IP Address:</strong></td>
+                                <td>@Context.Connection.RemoteIpAddress</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Características Planificadas</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Historial de inicios de sesión</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Registro de acciones por sesión</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Ubicaciones de acceso</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Dispositivos utilizados</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Duración de sesiones</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
