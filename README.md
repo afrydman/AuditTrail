@@ -14,10 +14,12 @@ Enterprise-grade audit trail system designed for pharmaceutical and clinical res
 
 ### **🔐 Security & Compliance**
 - **CFR 21 Part 11 Compliant** - FDA electronic records requirements
-- **Immutable Audit Trail** - SQL-enforced tamper protection
+- **Immutable Audit Trail** - SQL-enforced tamper protection  
 - **Dual Authentication** - JWT (API) + Cookie (Web) support
-- **BCrypt Password Security** - Industry-standard hashing
+- **BCrypt Password Security** - Industry-standard hashing with proper salt handling
 - **Role-Based Access Control** - 14 predefined pharmaceutical roles
+- **Stored Procedure Integration** - Authentication flow with complete audit logging
+- **Multi-Result Set Handling** - Robust Dapper implementation for complex SP responses
 
 ### **📁 File Management**
 - **Version Control** - Complete file history with checksums
@@ -59,13 +61,21 @@ dotnet build
 # Run API (Terminal 1)
 cd AuditTrail.API
 dotnet run
-# API: https://localhost:7001
+# API: https://localhost:5001
 
 # Run Web App (Terminal 2)
 cd AuditTrail.Web
 dotnet run  
-# Web: https://localhost:7002
+# Web: https://localhost:5002
 ```
+
+### **Default Credentials**
+```
+Username: admin
+Password: admin123
+```
+
+> **Note**: Login includes show/hide password toggle for improved usability.
 
 ### **Database**
 The database schema is already deployed with 19 tables. Update connection string in `appsettings.json` if needed:
@@ -212,13 +222,15 @@ Solution/
 ## 🔄 **Development Status**
 
 ### **✅ Completed (Production Ready)**
-- Database schema (19 tables)
-- Authentication & authorization
-- Audit trail system
-- REST API with Swagger
-- MVC web foundation
-- Permission system
-- File version control
+- Database schema (19 tables + stored procedures)
+- Authentication & authorization (fully tested with BCrypt)
+- Audit trail system with stored procedure integration
+- REST API with Swagger documentation
+- MVC web foundation with responsive login
+- Permission system with role-based access
+- File version control system
+- Comprehensive test suite (unit + integration)
+- Serilog logging with database and file outputs
 
 ### **🔄 In Progress**
 - File upload UI

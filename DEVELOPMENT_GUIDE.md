@@ -48,13 +48,21 @@ The database is already deployed with 19 tables. Connection string in `appsettin
 # Terminal 1 - API Server
 cd AuditTrail.API
 dotnet run
-# API runs on: https://localhost:7001
+# API runs on: https://localhost:5001
 
 # Terminal 2 - Web Application
 cd AuditTrail.Web  
 dotnet run
-# Web runs on: https://localhost:7002
+# Web runs on: https://localhost:5002
 ```
+
+### **4. Login Credentials**
+```
+Username: admin
+Password: admin123
+```
+
+> **✅ Authentication Status**: Fully working with BCrypt + stored procedures + comprehensive test coverage
 
 ---
 
