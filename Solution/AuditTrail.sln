@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35825.156 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuditTrail.API", "AuditTrail.API\AuditTrail.API.csproj", "{14206068-C9C4-48ED-B985-25E175D21B52}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuditTrail.Core", "AuditTrail.Core\AuditTrail.Core.csproj", "{22206068-C9C4-48ED-B985-25E175D21B52}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuditTrail.Infrastructure", "AuditTrail.Infrastructure\AuditTrail.Infrastructure.csproj", "{32206068-C9C4-48ED-B985-25E175D21B52}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuditTrail.Application", "AuditTrail.Application\AuditTrail.Application.csproj", "{42206068-C9C4-48ED-B985-25E175D21B52}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{14206068-C9C4-48ED-B985-25E175D21B52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14206068-C9C4-48ED-B985-25E175D21B52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14206068-C9C4-48ED-B985-25E175D21B52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14206068-C9C4-48ED-B985-25E175D21B52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22206068-C9C4-48ED-B985-25E175D21B52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22206068-C9C4-48ED-B985-25E175D21B52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22206068-C9C4-48ED-B985-25E175D21B52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22206068-C9C4-48ED-B985-25E175D21B52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32206068-C9C4-48ED-B985-25E175D21B52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32206068-C9C4-48ED-B985-25E175D21B52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32206068-C9C4-48ED-B985-25E175D21B52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32206068-C9C4-48ED-B985-25E175D21B52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42206068-C9C4-48ED-B985-25E175D21B52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42206068-C9C4-48ED-B985-25E175D21B52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42206068-C9C4-48ED-B985-25E175D21B52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42206068-C9C4-48ED-B985-25E175D21B52}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0B0D5C57-3CC1-4A7F-BD41-D5895003D9A0}
+	EndGlobalSection
+EndGlobal
