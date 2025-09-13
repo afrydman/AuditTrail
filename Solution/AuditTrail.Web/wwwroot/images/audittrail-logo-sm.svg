@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="50" height="50">
+  <!-- Icon Container -->
+  <circle cx="25" cy="25" r="20" fill="#0073d8"/>
+  
+  <!-- Shield Icon -->
+  <path d="M25 12 L25 12 C29 12, 34 14, 37 17 L37 27 C37 35, 32 40, 25 43 C18 40, 13 35, 13 27 L13 17 C16 14, 21 12, 25 12 Z" 
+        fill="#ffffff" stroke="none"/>
+  
+  <!-- Checkmark -->
+  <path d="M20 26 L23 29 L30 22" 
+        stroke="#0073d8" 
+        stroke-width="3" 
+        fill="none" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+  
+  <!-- Small text around the circle -->
+  <text x="25" y="46" font-family="Arial, sans-serif" font-size="6" fill="#2d435d" text-anchor="middle">
+    FDA
+  </text>
+</svg>

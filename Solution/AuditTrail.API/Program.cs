@@ -2,12 +2,45 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.MSSqlServer;
 using AuditTrail.Infrastructure.Data;
 using AuditTrail.Infrastructure.Repositories;
 using AuditTrail.Infrastructure.Interceptors;
 using AuditTrail.Core.Interfaces;
+using AuditTrail.API.Middleware;
+
+// Configure Serilog before creating the builder
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "API")
+    .Enrich.WithMachineName()
+    .Enrich.WithProcessId()
+    .Enrich.WithThreadId()
+    .WriteTo.File(
+        path: $"logs/api-{DateTime.Now:yyyy-MM-dd}.log",
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] [{Application}] {Message:lj} {Properties:j}{NewLine}{Exception}",
+        restrictedToMinimumLevel: LogEventLevel.Debug)
+    .WriteTo.MSSqlServer(
+        connectionString: "Server=.;Database=AuditTrail;Trusted_Connection=true;TrustServerCertificate=true;",
+        sinkOptions: new MSSqlServerSinkOptions
+        {
+            TableName = "APILogs",
+            SchemaName = "logging",
+            AutoCreateSqlTable = false
+        },
+        restrictedToMinimumLevel: LogEventLevel.Information)
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Use Serilog for logging
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -92,6 +125,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Add custom middleware early in pipeline
+app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 app.UseCors("LocalDevelopment");
 
 // Add authentication before authorization
@@ -122,4 +159,20 @@ app.Use(async (context, next) =>
 
 app.MapControllers();
 
-app.Run();
+try
+{
+    Log.Information("Starting AuditTrail API application");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "AuditTrail API application terminated unexpectedly");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+
+// Make Program class public for testing
+public partial class Program { }

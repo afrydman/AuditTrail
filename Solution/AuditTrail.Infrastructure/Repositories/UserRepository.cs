@@ -8,6 +8,20 @@ using BCrypt.Net;
 
 namespace AuditTrail.Infrastructure.Repositories;
 
+// Helper class for stored procedure result mapping
+public class AuthenticationResult
+{
+    public int Success { get; set; }  // SQL returns int (0/1), not bool
+    public string? Message { get; set; }
+    public Guid? UserId { get; set; }
+    public string? Username { get; set; }
+    public string? Email { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? RoleName { get; set; }
+    public bool MustChangePassword { get; set; }
+}
+
 public class UserRepository : Repository<User>, IUserRepository
 {
     private readonly IDapperContext _dapperContext;
@@ -44,36 +58,98 @@ public class UserRepository : Repository<User>, IUserRepository
         if (user == null || !user.IsActive || user.IsLocked)
             return false;
 
-        // Using BCrypt to verify password
-        return BCrypt.Net.BCrypt.Verify(password + user.PasswordSalt, user.PasswordHash);
+        // BCrypt already includes salt in the hash, don't concatenate PasswordSalt
+        return BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
     }
 
     public async Task<User?> AuthenticateAsync(string username, string password, string ipAddress)
     {
         using var connection = _dapperContext.CreateConnection();
         
-        // Call the stored procedure sp_AuthenticateUser
-        var parameters = new DynamicParameters();
-        parameters.Add("@Username", username);
-        parameters.Add("@PasswordHash", BCrypt.Net.BCrypt.HashPassword(password)); // This is simplified - in real scenario, get salt first
-        parameters.Add("@IPAddress", ipAddress);
-        parameters.Add("@UserId", dbType: DbType.Guid, direction: ParameterDirection.Output);
-        parameters.Add("@IsAuthenticated", dbType: DbType.Boolean, direction: ParameterDirection.Output);
-        parameters.Add("@Message", dbType: DbType.String, size: 500, direction: ParameterDirection.Output);
-
-        await connection.ExecuteAsync(
-            "auth.sp_AuthenticateUser",
-            parameters,
-            commandType: CommandType.StoredProcedure);
-
-        var isAuthenticated = parameters.Get<bool>("@IsAuthenticated");
-        
-        if (isAuthenticated)
+        // First, get the user and validate password locally with BCrypt
+        var user = await GetByUsernameAsync(username);
+        if (user == null)
         {
-            var userId = parameters.Get<Guid>("@UserId");
-            return await GetWithRoleAsync(userId);
+            // Call stored procedure to log failed attempt for non-existent user
+            var failParameters = new DynamicParameters();
+            failParameters.Add("@Username", username);
+            failParameters.Add("@IsSuccess", false);
+            failParameters.Add("@IPAddress", ipAddress);
+            failParameters.Add("@UserAgent", (string?)null);
+
+            await connection.QueryAsync(
+                "auth.sp_LogAuthenticationAttempt",
+                failParameters,
+                commandType: CommandType.StoredProcedure);
+                
+            return null;
         }
 
+        // Check if account is active and not locked
+        if (!user.IsActive || user.IsLocked)
+        {
+            // Call stored procedure to log failed attempt
+            var failParameters = new DynamicParameters();
+            failParameters.Add("@Username", username);
+            failParameters.Add("@UserId", user.Id);
+            failParameters.Add("@IsSuccess", false);
+            failParameters.Add("@FailureReason", !user.IsActive ? "Account deactivated" : "Account locked");
+            failParameters.Add("@IPAddress", ipAddress);
+            failParameters.Add("@UserAgent", (string?)null);
+
+            await connection.QueryAsync(
+                "auth.sp_LogAuthenticationAttempt",
+                failParameters,
+                commandType: CommandType.StoredProcedure);
+                
+            return null;
+        }
+
+        // Verify password using BCrypt
+        if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+        {
+            // Call stored procedure to handle failed authentication
+            var failParameters = new DynamicParameters();
+            failParameters.Add("@Username", username);
+            failParameters.Add("@UserId", user.Id);
+            failParameters.Add("@IsSuccess", false);
+            failParameters.Add("@FailureReason", "Invalid password");
+            failParameters.Add("@IPAddress", ipAddress);
+            failParameters.Add("@UserAgent", (string?)null);
+
+            await connection.QueryAsync(
+                "auth.sp_ProcessAuthenticationResult",
+                failParameters,
+                commandType: CommandType.StoredProcedure);
+                
+            return null;
+        }
+
+        // Successful authentication - call stored procedure to handle success
+        var successParameters = new DynamicParameters();
+        successParameters.Add("@Username", username);
+        successParameters.Add("@UserId", user.Id);
+        successParameters.Add("@IsSuccess", true);
+        successParameters.Add("@IPAddress", ipAddress);
+        successParameters.Add("@UserAgent", (string?)null);
+
+        // Use QueryMultiple to handle multiple result sets from stored procedure
+        using var multi = await connection.QueryMultipleAsync(
+            "auth.sp_ProcessAuthenticationResult",
+            successParameters,
+            commandType: CommandType.StoredProcedure);
+
+        // Skip the first result set (AuditId from sp_LogAuthenticationAttempt)
+        await multi.ReadAsync();
+        
+        // Read the second result set (actual authentication result)
+        var result = await multi.ReadFirstOrDefaultAsync<AuthenticationResult>();
+
+        if (result?.Success == 1 && result.UserId.HasValue)
+        {
+            return await GetWithRoleAsync(result.UserId.Value);
+        }
+        
         return null;
     }
 

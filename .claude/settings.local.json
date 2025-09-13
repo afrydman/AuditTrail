@@ -9,7 +9,11 @@
       "Bash(cp:*)",
       "Bash(dotnet add package:*)",
       "Bash(dotnet add reference:*)",
-      "Bash(dotnet build)"
+      "Bash(dotnet build)",
+      "Bash(mkdir:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet add:*)",
+      "Bash(sqlcmd:*)"
     ],
     "deny": []
   }

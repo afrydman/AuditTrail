@@ -1,0 +1,236 @@
+/* AuditTrail System Custom Styles */
+
+/* Custom color scheme for pharmaceutical/clinical theme */
+:root {
+    --audit-primary: #0073d8;
+    --audit-primary-dark: #005bb5;
+    --audit-secondary: #6c757d;
+    --audit-success: #03835d;
+    --audit-danger: #e4052e;
+    --audit-warning: #f6bc02;
+    --audit-info: #3c69c4;
+    --audit-light: #f0f8ff;
+    --audit-dark: #2d435d;
+    --audit-compliance: #03835d;
+}
+
+/* Override Bootstrap primary color */
+.btn-primary,
+.bg-primary,
+.text-primary,
+.border-primary {
+    --bs-primary: var(--audit-primary);
+    --bs-primary-rgb: 0, 115, 216;
+}
+
+/* Compliance badges and indicators */
+.compliance-badge {
+    background: rgba(3, 131, 93, 0.1);
+    border: 1px solid rgba(3, 131, 93, 0.3);
+    color: var(--audit-compliance);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.compliance-indicator {
+    width: 8px;
+    height: 8px;
+    background: var(--audit-compliance);
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.5rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Enhanced cards for regulatory content */
+.regulatory-card {
+    border-left: 4px solid var(--audit-compliance);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.regulatory-card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Audit trail specific styling */
+.audit-entry {
+    border-left: 3px solid #dee2e6;
+    padding-left: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.audit-entry::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 0.5rem;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--audit-info);
+}
+
+.audit-entry.critical::before {
+    background: var(--audit-danger);
+}
+
+.audit-entry.success::before {
+    background: var(--audit-success);
+}
+
+.audit-entry.warning::before {
+    background: var(--audit-warning);
+}
+
+/* File management specific styles */
+.file-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    margin-right: 1rem;
+    font-size: 1.5rem;
+}
+
+.file-icon.pdf {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.file-icon.doc,
+.file-icon.docx {
+    background: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.file-icon.xlsx,
+.file-icon.xls {
+    background: rgba(25, 135, 84, 0.1);
+    color: #198754;
+}
+
+.file-item {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.file-item:hover {
+    border-color: var(--audit-primary);
+    box-shadow: 0 2px 8px rgba(0, 115, 216, 0.1);
+}
+
+/* Permission management styling */
+.permission-matrix {
+    font-size: 0.875rem;
+}
+
+.permission-matrix th,
+.permission-matrix td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 0.5rem 0.25rem;
+}
+
+.permission-granted {
+    color: var(--audit-success);
+    font-weight: 600;
+}
+
+.permission-denied {
+    color: var(--audit-danger);
+    font-weight: 600;
+}
+
+.permission-inherited {
+    color: var(--audit-warning);
+    font-style: italic;
+}
+
+/* Role-based styling */
+.role-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.role-admin {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.role-investigator {
+    background: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.role-coordinator {
+    background: rgba(25, 135, 84, 0.1);
+    color: #198754;
+}
+
+.role-monitor {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.role-datamanager {
+    background: rgba(111, 66, 193, 0.1);
+    color: #6f42c1;
+}
+
+/* Enhanced form controls for regulatory data */
+.form-control:focus {
+    border-color: var(--audit-primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 115, 216, 0.25);
+}
+
+.form-select:focus {
+    border-color: var(--audit-primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 115, 216, 0.25);
+}
+
+/* Mobile responsiveness improvements */
+@media (max-width: 768px) {
+    .sidebar-wrapper {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar-wrapper.show {
+        transform: translateX(0);
+    }
+    
+    .app-body {
+        margin-left: 0 !important;
+    }
+}
+
+/* Focus indicators for keyboard navigation */
+.btn:focus,
+.form-control:focus,
+.form-select:focus,
+.nav-link:focus {
+    outline: 2px solid var(--audit-primary);
+    outline-offset: 2px;
+}

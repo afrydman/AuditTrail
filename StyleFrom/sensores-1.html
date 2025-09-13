@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bot Monitoreo</title>
+
+    <!-- Meta -->
+    <meta name="description" content="Marketplace for Admin Dashboard Templates" />
+    <meta name="author" content="Bootstrap Gallery" />
+    <link rel="canonical" href="https://www.bootstrap.gallery/">
+    <meta property="og:url" content="https://www.bootstrap.gallery">
+    <meta property="og:title" content="Admin Templates - Dashboard Templates | Bootstrap Gallery">
+    <meta property="og:description" content="Marketplace for Bootstrap Admin Dashboards">
+    <meta property="og:type" content="Website">
+    <meta property="og:site_name" content="Bootstrap Gallery">
+    <link rel="shortcut icon" href="assets/images/favicon.svg" />
+
+    <!-- *************
+			************ CSS Files *************
+		************* -->
+    <link rel="stylesheet" href="assets/fonts/bootstrap/bootstrap-icons.css" />
+    <link rel="stylesheet" href="assets/css/main.min.css" />
+
+    <!-- *************
+			************ Vendor Css Files *************
+		************ -->
+
+    <!-- Scrollbar CSS -->
+    <link rel="stylesheet" href="assets/vendor/overlay-scroll/OverlayScrollbars.min.css" />
+  </head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 400px;
+      max-width: 95%;
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+  </style>
+  <body>
+
+    <!-- Page wrapper start -->
+    <div class="page-wrapper">
+
+    <!-- App header starts -->
+    <div class="app-header d-flex align-items-center">
+
+      <!-- Toggle buttons start -->
+      <div class="d-flex">
+        <button class="toggle-sidebar" id="toggle-sidebar">
+          <i class="bi bi-list lh-1"></i>
+        </button>
+        <button class="pin-sidebar" id="pin-sidebar">
+          <i class="bi bi-list lh-1"></i>
+        </button>
+      </div>
+      <!-- Toggle buttons end -->
+
+      <!-- App brand starts -->
+      <div class="app-brand py-2 ms-3">
+        <a href="index.html" class="d-sm-block d-none">
+          <img src="assets/images/botMonitoreoLogo.png" class="logo" alt="Bootstrap Gallery" />
+        </a>
+        <a href="index.html" class="d-sm-none d-block">
+          <img src="assets/images/botMonitoreoLogo.png" class="logo" alt="Bootstrap Gallery" />
+        </a>
+      </div>
+      <!-- App brand ends -->
+
+      <!-- App header actions start -->
+      <div class="header-actions col">
+        <div class="d-lg-flex d-none">
+          <!--<div class="dropdown">
+            <a class="dropdown-toggle d-flex px-3 py-4 position-relative" href="#!" role="button"
+              data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-grid fs-4 lh-1 text-secondary"></i>
+            </a>
+             <div class="dropdown-menu dropdown-menu-end shadow-lg">
+           Row start
+              <div class="d-flex gap-2 m-2">
+                <a href="javascript:void(0)" class="g-col-4 p-2 border rounded-2">
+                  <img src="assets/images/brand-behance.svg" class="img-3x" alt="Admin Themes" />
+                </a>
+                <a href="javascript:void(0)" class="g-col-4 p-2 border rounded-2">
+                  <img src="assets/images/brand-gatsby.svg" class="img-3x" alt="Admin Themes" />
+                </a>
+                <a href="javascript:void(0)" class="g-col-4 p-2 border rounded-2">
+                  <img src="assets/images/brand-google.svg" class="img-3x" alt="Admin Themes" />
+                </a>
+                <a href="javascript:void(0)" class="g-col-4 p-2 border rounded-2">
+                  <img src="assets/images/brand-bitcoin.svg" class="img-3x" alt="Admin Themes" />
+                </a>
+                <a href="javascript:void(0)" class="g-col-4 p-2 border rounded-2">
+                  <img src="assets/images/brand-dribbble.svg" class="img-3x" alt="Admin Themes" />
+                </a>
+              </div>
+              <!-- Row end 
+            </div> -->
+          </div>
+          <div class="dropdown border-start">
+            <a class="dropdown-toggle d-flex px-3 py-4 position-relative" href="#!" role="button"
+              data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-exclamation-triangle fs-4 lh-1 text-secondary"></i>
+              <span class="count-label warning"></span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end shadow-lg">
+              <h5 class="fw-semibold px-3 py-2 text-primary">
+                Alertas
+              </h5>
+              <div class="dropdown-item">
+                <div class="d-flex py-2">
+                  <div class="icon-box md bg-warning rounded-circle me-3">
+                    <i class="bi bi-exclamation-square text-white fs-4"></i>
+                  </div>
+                  <div class="m-0">
+                    <h6 class="mb-1 fw-semibold">Sector Exterior -> Sensor Combustible1</h6>
+                    <p class="mb-1">Se registraron valores cercanos al limite.</p>
+                    <p class="small m-0 text-secondary">23/07/2025</p>
+                  </div>
+                </div>
+              </div>
+              <div class="dropdown-item">
+                <div class="d-flex py-2 border-bottom">
+                  <div class="icon-box md bg-danger rounded-circle me-3">
+                    <i class="bi bi-exclamation-octagon text-white fs-4"></i>
+                  </div>
+                  <div class="m-0">
+                    <h6 class="mb-1 fw-semibold">Sala de maquinas -> AA1</h6>
+                    <p class="mb-1">Falla electrica.</p>
+                    <p class="small m-0 text-secondary">23/07/2025 18:00</p>
+                  </div>
+                </div>
+              </div>
+              <div class="dropdown-item">
+                <div class="d-flex py-2">
+                  <div class="icon-box md bg-warning rounded-circle me-3">
+                    <i class="bi bi-exclamation-square text-white fs-4"></i>
+                  </div>
+                  <div class="m-0">
+                    <h6 class="mb-1 fw-semibold">Sector Exterior -> Sensor Nitrogeno1</h6>
+                    <p class="mb-1">Se registraron valores cercanos al limite.</p>
+                    <p class="small m-0 text-secondary">24/07/2025</p>
+                  </div>
+                </div>
+              </div>
+              <div class="d-grid mx-3 my-1">
+                <a href="javascript:void(0)" class="btn btn-primary">Ver Todas</a>
+              </div>
+            </div>
+          </div>
+          <div class="dropdown border-start">
+            <a class="dropdown-toggle d-flex px-3 py-4 position-relative" href="#!" role="button"
+              data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-bell fs-4 lh-1 text-secondary"></i>
+              <span class="count-label info"></span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end shadow-lg">
+              <h5 class="fw-semibold px-3 py-2 text-primary">Notificaciones</h5>
+              <div class="dropdown-item">
+                <div class="d-flex py-2 border-bottom">
+                  <div class="icon-box md bg-danger rounded-circle me-3">
+                    <i class="bi bi-exclamation-octagon text-white fs-4"></i>
+                  </div>
+                  <div class="m-0">
+                    <h6 class="mb-1 fw-semibold">Sensor 1</h6>
+                    <p class="mb-1">Certificado vencido.</p>
+                    <p class="small m-0 text-secondary">2 dia(s) atras (15/07/2025)</p>
+                  </div>
+                </div>
+              </div>
+              <div class="dropdown-item">
+                <div class="d-flex py-2">
+                  <div class="icon-box md bg-warning rounded-circle me-3">
+                    <i class="bi bi-exclamation-square text-white fs-4"></i>
+                  </div>
+                  <div class="m-0">
+                    <h6 class="mb-1 fw-semibold">Sensor 2</h6>
+                    <p class="mb-1">Certificado proximo a vencer.</p>
+                    <p class="small m-0 text-secondary">dentro de 10 dias (25/07/2025)</p>
+                  </div>
+                </div>
+              </div>
+             
+              <div class="d-grid mx-3 my-1">
+                <a href="javascript:void(0)" class="btn btn-primary">Ver Todas</a>
+              </div>
+            </div>
+          </div>
+         
+        </div>
+        <div class="dropdown ms-2">
+          <a id="userSettings" class="dropdown-toggle d-flex py-2 align-items-center text-decoration-none" href="#!"
+            role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="assets/images/user1.png" class="rounded-2 img-3x" alt="Bootstrap Gallery" />
+            <span class="ms-2 text-truncate d-lg-block d-none">juana perez</span>
+          </a>
+          <div class="dropdown-menu dropdown-menu-end shadow-lg">
+            <div class="header-action-links mx-3 gap-2">
+              <a class="dropdown-item" href="profile.html"><i class="bi bi-person text-primary"></i>Profile</a>
+              <a class="dropdown-item" href="settings.html"><i class="bi bi-gear text-danger"></i>Settings</a>
+              <a class="dropdown-item" href="widgets.html"><i class="bi bi-box text-success"></i>Widgets</a>
+            </div>
+            <div class="mx-3 mt-2 d-grid">
+              <a href="login.html" class="btn btn-primary btn-sm">Logout</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- App header actions end -->
+
+      <!-- Main container start -->
+      <div class="main-container">
+
+           <!-- Sidebar wrapper start -->
+           <nav id="sidebar" class="sidebar-wrapper">
+
+            <!-- Sidebar profile starts -->
+            <div class="shop-profile">
+              <p class="mb-1 fw-bold text-primary">Amgen</p>
+              <p class="m-0">Vicente Lopez, Buenos Aires</p>
+            </div>
+            <!-- Sidebar profile ends -->
+  
+            <!-- Sidebar menu starts -->
+            <div class="sidebarMenuScroll">
+              <ul class="sidebar-menu">
+                <li >
+                  <a href="index.html">
+                    <i class="bi bi-pie-chart"></i>
+                    <span class="menu-text">Dashboard</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="realTime.html">
+                    <i class="bi bi-bar-chart-line"></i>
+                    <span class="menu-text">Tiempo Real</span>
+                  </a>
+                </li>
+                <li class="active current-page">
+                  <a href="sensores-1.html">
+                    <i class="bi bi-box"></i>
+                    <span class="menu-text">Sensores</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="zonas.html">
+                    <i class="bi bi-calendar2"></i>
+                    <span class="menu-text">Zonas</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="alarmas.html">
+                    <i class=" fs-3 bi bi-alarm"></i>
+                    <span class="menu-text">Alarmas</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="gps.html">
+                    <i class="bi  bi-pin-map"></i>
+                    <span class="menu-text">GPS</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="certificados.html">
+                    <i class="fs-3 bi bi-printer"></i>
+                    <span class="menu-text">Certificados</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="certificados.html">
+                    <i class="fs-3 bi bi-robot"></i>
+                    <span class="menu-text">Analisis Predictivo AI</span>
+                  </a>
+                </li>
+                
+            </div>
+            <!-- Sidebar menu ends -->
+  
+          </nav>
+          <!-- Sidebar wrapper end -->
+
+        <!-- App container starts -->
+        <div class="app-container">
+
+          <!-- App hero header starts -->
+          <div class="app-hero-header d-flex align-items-start">
+
+            <!-- Breadcrumb start -->
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item">
+                <i class="bi bi-house lh-1"></i>
+                <a href="index.html" class="text-decoration-none">Home</a>
+              </li>
+              <li class="breadcrumb-item" aria-current="page">Sensores</li>
+            </ol>
+            <!-- Breadcrumb end -->
+
+            <!-- Sales stats start -->
+
+            <!-- Sales stats end -->
+
+          </div>
+          <!-- App Hero header ends -->
+
+          <!-- App body starts -->
+          <div class="app-body">
+            <a href="#" class="btn btn-success" style="margin:10px">Agregar Nuevo Sensor</a>
+            <!-- Row start -->
+            <div class="row gx-3">
+              <div class="col-xxl-12">
+                <div class="card mb-3">
+                  <div class="card-body">
+                    <div class="table-responsive">
+                      <table class="table align-middle table-hover m-0">
+                        <thead>
+                          <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Sensor</th>
+                            <th scope="col">Categoria</th>
+                            <th scope="col">Zona</th>
+                            <th scope="col">Modelo</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Alerta Configurada</th>
+                            
+                            <th scope="col">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <th scope="row">
+                             1
+                            </th>
+                            <td>WF501B WiFi 1</td>
+                            <td>Temperatura/Humedad</td>
+                            <td>Sala de Maquinas</td>
+                            <td>WF501B</td>
+                            <td><span class="badge border border-success text-danger">OFFLINE</span></td>
+                            <td>
+                              <div class="border border-light p-4 rounded-3">
+                                <i class="fs-3 bi bi-check2-circle"></i>
+                              </div>
+                            </td>
+                            
+                            <td>
+                              <a class="btn btn-info btn-sm" href="#" onclick="openModal()"><i class="bi bi-pencil"></i>
+                              </a>
+                              <a class="btn btn-danger btn-icon btn-sm " href="#"><i class="bi bi-trash"></i>
+                              </a>
+                            </td>
+                          </tr>
+                          <tr>
+                            <th scope="row">
+                             2
+                            </th>
+                            <td>WF501B WiFi 2</td>
+                            <td>Temperatura</td>
+                            <td>Sala de Maquinas</td>
+                            <td>WF501C</td>
+                            <td><span class="badge border border-success text-success">Online</span></td>
+                            <td>
+                              <div class="border border-light p-4 rounded-3">
+                                <i class="fs-3 bi bi-check2-circle"></i>
+                              </div>
+                            </td>
+                            
+                            <td>
+                              <a class="btn btn-info btn-sm" href="#" onclick="openModal()"><i class="bi bi-pencil"></i>
+                              </a>
+                              <a class="btn btn-danger btn-icon btn-sm " href="#"><i class="bi bi-trash"></i>
+                              </a>
+                            </td>
+                          </tr>
+                          <tr>
+                            <th scope="row">
+                             3
+                            </th>
+                            <td>Tanque Combustible1</td>
+                            <td>Caudalimetro</td>
+                            <td>Zona Exterior</td>
+                            <td>sdC100</td>
+                            <td><span class="badge border border-success text-success">Online</span></td>
+                            <td>
+                              <div class="border border-light p-4 rounded-3">
+                                <i class="fs-3 bi bi-check2-circle"></i>
+                              </div>
+                            </td>
+                            
+                            <td>
+                              <a class="btn btn-info btn-sm" href="#" onclick="openModal()" "><i class="bi bi-pencil"></i>
+                              </a>
+                              <a class="btn btn-danger btn-icon btn-sm " href="#"><i class="bi bi-trash"></i>
+                              </a>
+                            </td>
+                          </tr>
+                          <tr>
+                            <th scope="row">
+                             4
+                            </th>
+                            <td>Tanque Combustible2</td>
+                            <td>Caudalimetro</td>
+                            <td>Zona Exterior</td>
+                            <td>sdC100</td>
+                            <td><span class="badge border border-success text-success">Online</span></td>
+                            <td>
+                              <div class="border border-light p-4 rounded-3">
+                                <i class="fs-3 bi bi-check2-circle"></i>
+                              </div>
+                            </td>
+                            
+                            <td>
+                              <a class="btn btn-info btn-sm" href="#" onclick="openModal()"><i class="bi bi-pencil"></i>
+                              </a>
+                              <a class="btn btn-danger btn-icon btn-sm " href="#"><i class="bi bi-trash"></i>
+                              </a>
+                            </td>
+                          </tr>
+                          <tr>
+                            <th scope="row">
+                             5
+                            </th>
+                            <td>Tanque Nitrogeno1</td>
+                            <td>Caudalimetro</td>
+                            <td>Zona Exterior</td>
+                            <td>WF501B</td>
+                            <td><span class="badge border border-success text-success">Online</span></td>
+                            <td>
+                              <div class="border border-light p-4 rounded-3">
+                                <i class="fs-3 bi bi-x-circle"></i>
+                              </div>
+                            </td>
+                            
+                            <td>
+                              <a class="btn btn-info btn-sm" href="#" onclick="openModal()"><i class="bi bi-pencil"></i>
+                              </a>
+                              <a class="btn btn-danger btn-icon btn-sm" href="#"><i class="bi bi-trash"></i>
+                              </a>
+                            </td>
+                          </tr>
+                          <tr>
+                            <th scope="row">
+                             6
+                            </th>
+                            <td>Electrico-AA1</td>
+                            <td>Electricidad</td>
+                            <td>Sala de Maquinas</td>
+                            <td>WF501B</td>
+                            <td><span class="badge border border-success text-success">Online</span></td>
+                            <td>
+                              <div class="border border-light p-4 rounded-3">
+                                <i class="fs-3 bi bi-x-circle"></i>
+                              </div>
+                            </td>
+                            
+                            <td>
+                              <a class="btn btn-info btn-sm" href="#" onclick="openModal()"><i class="bi bi-pencil"></i>
+                              </a>
+                              <a class="btn btn-danger btn-icon btn-sm" href="#"><i class="bi bi-trash"></i>
+                              </a>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+             
+            
+            </div>
+            <!-- Row end -->
+
+          </div>
+          <!-- App body ends -->
+
+          <!-- App footer start -->
+     
+          <!-- App footer end -->
+
+        </div>
+        <!-- App container ends -->
+
+      </div>
+      <!-- Main container end -->
+
+    </div>
+    <!-- Page wrapper end -->
+    <div class="modal" id="sensorModal">
+      <div class="modal-content">
+        <h2 id="modalTitle">Nuevo Sensor</h2>
+  
+        <div class="form-group">
+          <label for="sensorId">ID</label>
+          <input type="number" id="sensorId" disabled value="6">
+        </div>
+  
+        <div class="form-group">
+          <label for="sensorNombre">Nombre</label>
+          <input type="text" id="sensorNombre" required>
+        </div>
+  
+        <div class="form-group">
+          <label for="sensorCategoria">Categoría</label>
+          <select id="sensorCategoria">
+            <option value="temperatura">Temperatura</option>
+            <option value="temperatura/humedad">Temperatura/Humedad</option>
+            <option value="caudalimetro">Caudalímetro</option>
+          </select>
+        </div>
+  
+        <div class="form-group">
+          <label for="sensorZona">Zona</label>
+          <select id="sensorZona">
+            <option value="zona de maquinas">Zona de Máquinas</option>
+            <option value="exterior">Exterior</option>
+          </select>
+        </div>
+  
+        <div class="form-group">
+          <label for="sensorModelo">Modelo</label>
+          <input type="text" id="sensorModelo" required>
+        </div>
+  
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+          <button class="btn-primary" onclick="guardarSensor()">Guardar</button>
+        </div>
+      </div>
+    </div>
+    <!-- *************
+			************ JavaScript Files *************
+		************* -->
+    <!-- Required jQuery first, then Bootstrap Bundle JS -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script>
+      function openModal(sensor = null) {
+        document.getElementById('sensorModal').style.display = 'flex';
+        document.getElementById('modalTitle').innerText = sensor ? "Editar Sensor" : "Nuevo Sensor";
+  
+        // Rellenar campos si hay sensor (modo edición)
+        document.getElementById('sensorId').value = sensor?.id || '';
+        document.getElementById('sensorNombre').value = sensor?.nombre || '';
+        document.getElementById('sensorCategoria').value = sensor?.categoria || 'temperatura';
+        document.getElementById('sensorZona').value = sensor?.zona || 'zona de maquinas';
+        document.getElementById('sensorModelo').value = sensor?.modelo || '';
+      }
+  
+      function closeModal() {
+        document.getElementById('sensorModal').style.display = 'none';
+      }
+  
+      function guardarSensor() {
+        const sensor = {
+          id: document.getElementById('sensorId').value,
+          nombre: document.getElementById('sensorNombre').value,
+          categoria: document.getElementById('sensorCategoria').value,
+          zona: document.getElementById('sensorZona').value,
+          modelo: document.getElementById('sensorModelo').value
+        };
+  
+        console.log("Guardando sensor:", sensor);
+        // Aquí puedes enviar los datos a tu backend o guardarlos en memoria
+  
+        closeModal();
+      }
+    </script>
+    <!-- *************
+			************ Vendor Js Files *************
+		************* -->
+
+    <!-- Overlay Scroll JS -->
+    <script src="assets/vendor/overlay-scroll/jquery.overlayScrollbars.min.js"></script>
+    <script src="assets/vendor/overlay-scroll/custom-scrollbar.js"></script>
+
+    <!-- Custom JS files -->
+    <script src="assets/js/custom.js"></script>
+  </body>
+
+</html>

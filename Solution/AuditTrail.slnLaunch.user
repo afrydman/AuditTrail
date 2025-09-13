@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "AuditTrail.API\\AuditTrail.API.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "AuditTrail.Web\\AuditTrail.Web.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

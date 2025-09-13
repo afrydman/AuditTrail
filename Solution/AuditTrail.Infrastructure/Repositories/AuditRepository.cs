@@ -6,6 +6,12 @@ using AuditTrail.Infrastructure.Data;
 
 namespace AuditTrail.Infrastructure.Repositories;
 
+// Helper class for stored procedure result mapping
+public class AuditIdResult
+{
+    public Guid AuditId { get; set; }
+}
+
 public class AuditRepository : IAuditRepository
 {
     private readonly IDapperContext _dapperContext;
@@ -36,14 +42,14 @@ public class AuditRepository : IAuditRepository
         parameters.Add("@NewValue", entry.NewValue);
         parameters.Add("@Result", entry.Result);
         parameters.Add("@ErrorMessage", entry.ErrorMessage);
-        parameters.Add("@AuditId", dbType: DbType.Guid, direction: ParameterDirection.Output);
+        parameters.Add("@Duration", entry.Duration);
 
-        await connection.ExecuteAsync(
+        var result = await connection.QueryFirstOrDefaultAsync<AuditIdResult>(
             "audit.sp_LogAuditEvent",
             parameters,
             commandType: CommandType.StoredProcedure);
         
-        entry.AuditId = parameters.Get<Guid>("@AuditId");
+        entry.AuditId = result?.AuditId ?? Guid.Empty;
     }
 
     public async Task LogAuditEventAsync(

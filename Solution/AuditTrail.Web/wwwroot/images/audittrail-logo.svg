@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" width="200" height="50">
+  <!-- Background -->
+  <rect width="200" height="50" fill="#ffffff" rx="4"/>
+  
+  <!-- Icon Container -->
+  <circle cx="25" cy="25" r="18" fill="#0073d8"/>
+  
+  <!-- Shield Icon -->
+  <path d="M25 10 L25 10 C28 10, 32 12, 34 15 L34 25 C34 32, 30 37, 25 40 C20 37, 16 32, 16 25 L16 15 C18 12, 22 10, 25 10 Z" 
+        fill="#ffffff" stroke="none"/>
+  
+  <!-- Checkmark -->
+  <path d="M21 25 L23.5 27.5 L29 22" 
+        stroke="#0073d8" 
+        stroke-width="2" 
+        fill="none" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+  
+  <!-- Text -->
+  <text x="52" y="20" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#2d435d">
+    AuditTrail
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="52" y="35" font-family="Arial, sans-serif" font-size="10" fill="#6c757d">
+    CFR 21 Part 11 Compliant
+  </text>
+  
+  <!-- Compliance Badge -->
+  <rect x="150" y="18" width="40" height="14" fill="#03835d" rx="7"/>
+  <text x="170" y="28" font-family="Arial, sans-serif" font-size="8" fill="white" text-anchor="middle">
+    FDA
+  </text>
+</svg>

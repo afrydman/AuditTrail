@@ -89,7 +89,7 @@ public class AuthController : ControllerBase
                 ExpiresAt = DateTime.UtcNow.AddMinutes(GetTokenExpirationMinutes()),
                 User = new UserDto
                 {
-                    UserId = user.Id,
+                    Id = user.Id,
                     Username = user.Username,
                     Email = user.Email,
                     FirstName = user.FirstName,
@@ -156,7 +156,7 @@ public class AuthController : ControllerBase
 
             var userDto = new UserDto
             {
-                UserId = user.Id,
+                Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
                 FirstName = user.FirstName,

@@ -100,6 +100,22 @@ public class AuditTrailDbContext : DbContext
                 .HasForeignKey(e => e.ParentCategoryId);
         });
 
+        // Configure FileVersion
+        modelBuilder.Entity<FileVersion>(entity =>
+        {
+            entity.HasKey(e => e.VersionId);
+            entity.Property(e => e.FileName).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.BlobUrl).HasMaxLength(500);
+            entity.Property(e => e.S3Key).HasMaxLength(500);
+            entity.Property(e => e.Checksum).HasMaxLength(100);
+            
+            entity.HasOne(e => e.File)
+                .WithMany()
+                .HasForeignKey(e => e.FileId);
+                
+            entity.HasIndex(e => new { e.FileId, e.Version }).IsUnique();
+        });
+
         // Configure AuditTrailEntry - IMMUTABLE table
         modelBuilder.Entity<AuditTrailEntry>(entity =>
         {
