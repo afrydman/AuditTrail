@@ -199,4 +199,19 @@ public class UserRepository : Repository<User>, IUserRepository
                 AND AttemptDate >= @Since",
             new { Username = username, Since = since });
     }
+
+    public async Task<IEnumerable<User>> GetAllWithRolesAsync()
+    {
+        return await _context.Users
+            .Include(u => u.Role)
+            .OrderBy(u => u.Username)
+            .ToListAsync();
+    }
+
+    public async Task<User?> GetByIdWithRoleAsync(Guid userId)
+    {
+        return await _context.Users
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+    }
 }

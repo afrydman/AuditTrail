@@ -1,0 +1,631 @@
+@model AuditTrail.Web.Models.UserListViewModel
+@{
+    ViewData["Breadcrumb"] = "<li class=\"breadcrumb-item active\" aria-current=\"page\">Gestión de Usuarios</li>";
+}
+
+<div class="row">
+    <div class="col-12">
+        <!-- Page header -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h4 class="mb-1">
+                            <i class="bi bi-people-fill text-primary me-2"></i>
+                            Gestión de Usuarios
+                        </h4>
+                        <p class="text-muted mb-0">Administra usuarios, roles y permisos del sistema</p>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-primary" onclick="openCreateUserModal()">
+                            <i class="bi bi-person-plus me-2"></i>
+                            Nuevo Usuario
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" action="@Url.Action("Index", "Users")" class="row g-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" 
+                                   name="searchTerm" 
+                                   value="@Model.SearchTerm" 
+                                   class="form-control" 
+                                   placeholder="Buscar por nombre, email o rol..." 
+                                   aria-label="Buscar usuarios">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        @{
+                            var currentPageSize = ViewData["PageSize"]?.ToString() ?? "10";
+                        }
+                        <select name="pageSize" class="form-select" onchange="this.form.submit()">
+                            @if (currentPageSize == "10")
+                            {
+                                <option value="10" selected>10 por página</option>
+                            }
+                            else
+                            {
+                                <option value="10">10 por página</option>
+                            }
+                            
+                            @if (currentPageSize == "25")
+                            {
+                                <option value="25" selected>25 por página</option>
+                            }
+                            else
+                            {
+                                <option value="25">25 por página</option>
+                            }
+                            
+                            @if (currentPageSize == "50")
+                            {
+                                <option value="50" selected>50 por página</option>
+                            }
+                            else
+                            {
+                                <option value="50">50 por página</option>
+                            }
+                            
+                            @if (currentPageSize == "100")
+                            {
+                                <option value="100" selected>100 por página</option>
+                            }
+                            else
+                            {
+                                <option value="100">100 por página</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-funnel me-2"></i>
+                            Filtrar
+                        </button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.SearchTerm))
+                    {
+                        <div class="col-md-2">
+                            <a href="@Url.Action("Index", "Users")" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Limpiar
+                            </a>
+                        </div>
+                    }
+                </form>
+            </div>
+        </div>
+
+        <!-- Users table -->
+        <div class="card">
+            <div class="card-body">
+                @if (Model.Users.Count > 0)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th scope="col" style="width: 50px;">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAll">
+                                        </div>
+                                    </th>
+                                    <th scope="col">
+                                        <a asp-action="Index" asp-route-sortOrder="@ViewData["NameSortParm"]" 
+                                           asp-route-currentFilter="@ViewData["CurrentFilter"]"
+                                           class="text-decoration-none text-dark">
+                                            Usuario
+                                            @if (ViewData["CurrentSort"]?.ToString() == "")
+                                            {
+                                                <i class="bi bi-caret-up-fill text-primary"></i>
+                                            }
+                                            else if (ViewData["CurrentSort"]?.ToString() == "name_desc")
+                                            {
+                                                <i class="bi bi-caret-down-fill text-primary"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th scope="col">
+                                        <a asp-action="Index" asp-route-sortOrder="@ViewData["EmailSortParm"]"
+                                           asp-route-currentFilter="@ViewData["CurrentFilter"]"
+                                           class="text-decoration-none text-dark">
+                                            Email
+                                            @if (ViewData["CurrentSort"]?.ToString() == "Email")
+                                            {
+                                                <i class="bi bi-caret-up-fill text-primary"></i>
+                                            }
+                                            else if (ViewData["CurrentSort"]?.ToString() == "email_desc")
+                                            {
+                                                <i class="bi bi-caret-down-fill text-primary"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th scope="col">
+                                        <a asp-action="Index" asp-route-sortOrder="@ViewData["RoleSortParm"]"
+                                           asp-route-currentFilter="@ViewData["CurrentFilter"]"
+                                           class="text-decoration-none text-dark">
+                                            Rol
+                                            @if (ViewData["CurrentSort"]?.ToString() == "Role")
+                                            {
+                                                <i class="bi bi-caret-up-fill text-primary"></i>
+                                            }
+                                            else if (ViewData["CurrentSort"]?.ToString() == "role_desc")
+                                            {
+                                                <i class="bi bi-caret-down-fill text-primary"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th scope="col">
+                                        <a asp-action="Index" asp-route-sortOrder="@ViewData["StatusSortParm"]"
+                                           asp-route-currentFilter="@ViewData["CurrentFilter"]"
+                                           class="text-decoration-none text-dark">
+                                            Estado
+                                            @if (ViewData["CurrentSort"]?.ToString() == "Status")
+                                            {
+                                                <i class="bi bi-caret-up-fill text-primary"></i>
+                                            }
+                                            else if (ViewData["CurrentSort"]?.ToString() == "status_desc")
+                                            {
+                                                <i class="bi bi-caret-down-fill text-primary"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th scope="col">
+                                        <a asp-action="Index" asp-route-sortOrder="@ViewData["LastLoginSortParm"]"
+                                           asp-route-currentFilter="@ViewData["CurrentFilter"]"
+                                           class="text-decoration-none text-dark">
+                                            Último Acceso
+                                            @if (ViewData["CurrentSort"]?.ToString() == "LastLogin")
+                                            {
+                                                <i class="bi bi-caret-up-fill text-primary"></i>
+                                            }
+                                            else if (ViewData["CurrentSort"]?.ToString() == "lastlogin_desc")
+                                            {
+                                                <i class="bi bi-caret-down-fill text-primary"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th scope="col" class="text-center">Verificado</th>
+                                    <th scope="col" class="text-center">Bloqueado</th>
+                                    <th scope="col" class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in Model.Users)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="@user.Id">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm me-3">
+                                                    <div class="avatar-initials rounded-circle bg-primary text-white">
+                                                        @user.FirstName.FirstOrDefault()@user.LastName.FirstOrDefault()
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0">@user.FirstName @user.LastName</h6>
+                                                    <small class="text-muted">@@@user.Username</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="mailto:@user.Email" class="text-decoration-none">
+                                                @user.Email
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info-subtle text-info">
+                                                <i class="bi bi-shield-lock me-1"></i>
+                                                @(user.Role?.RoleName ?? "Sin Rol")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if (user.IsActive)
+                                            {
+                                                <span class="badge bg-success-subtle text-success">
+                                                    <i class="bi bi-check-circle me-1"></i>
+                                                    Activo
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger-subtle text-danger">
+                                                    <i class="bi bi-x-circle me-1"></i>
+                                                    Inactivo
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (user.LastLoginDate.HasValue)
+                                            {
+                                                <small class="text-muted">
+                                                    <i class="bi bi-clock me-1"></i>
+                                                    @user.LastLoginDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                                </small>
+                                                @if (user.LastLoginIP != null)
+                                                {
+                                                    <br />
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-geo-alt me-1"></i>
+                                                        @user.LastLoginIP
+                                                    </small>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <small class="text-muted">Nunca</small>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (user.IsEmailVerified)
+                                            {
+                                                <i class="bi bi-check-circle-fill text-success" data-bs-toggle="tooltip" title="Email verificado"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-exclamation-circle text-warning" data-bs-toggle="tooltip" title="Email no verificado"></i>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (user.IsLocked)
+                                            {
+                                                <button class="btn btn-sm btn-danger-subtle" 
+                                                        onclick="unlockAccount('@user.Id')"
+                                                        data-bs-toggle="tooltip" 
+                                                        title="Desbloquear cuenta">
+                                                    <i class="bi bi-lock-fill"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-unlock text-success" data-bs-toggle="tooltip" title="Cuenta activa"></i>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-outline-primary"
+                                                        onclick="openUserDetailsModal('@user.Id')"
+                                                        data-bs-toggle="tooltip" 
+                                                        title="Ver detalles">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-outline-secondary"
+                                                        onclick="openEditUserModal('@user.Id')"
+                                                        data-bs-toggle="tooltip" 
+                                                        title="Editar usuario">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button type="button" 
+                                                        class="btn btn-sm @(user.IsActive ? "btn-outline-warning" : "btn-outline-success")"
+                                                        onclick="toggleStatus('@user.Id')"
+                                                        data-bs-toggle="tooltip" 
+                                                        title="@(user.IsActive ? "Desactivar" : "Activar") usuario">
+                                                    <i class="bi @(user.IsActive ? "bi-toggle-on" : "bi-toggle-off")"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    @if (Model.Users.TotalPages > 1)
+                    {
+                        <nav aria-label="Navegación de páginas" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                @if (Model.Users.HasPreviousPage)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" 
+                                           asp-action="Index" 
+                                           asp-route-sortOrder="@ViewData["CurrentSort"]"
+                                           asp-route-pageNumber="@(Model.Users.PageIndex - 1)"
+                                           asp-route-currentFilter="@ViewData["CurrentFilter"]"
+                                           asp-route-pageSize="@ViewData["PageSize"]">
+                                            <i class="bi bi-chevron-left"></i>
+                                            Anterior
+                                        </a>
+                                    </li>
+                                }
+
+                                @for (int i = Math.Max(1, Model.Users.PageIndex - 2); i <= Math.Min(Model.Users.TotalPages, Model.Users.PageIndex + 2); i++)
+                                {
+                                    <li class="page-item @(i == Model.Users.PageIndex ? "active" : "")">
+                                        <a class="page-link" 
+                                           asp-action="Index" 
+                                           asp-route-sortOrder="@ViewData["CurrentSort"]"
+                                           asp-route-pageNumber="@i"
+                                           asp-route-currentFilter="@ViewData["CurrentFilter"]"
+                                           asp-route-pageSize="@ViewData["PageSize"]">
+                                            @i
+                                        </a>
+                                    </li>
+                                }
+
+                                @if (Model.Users.HasNextPage)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" 
+                                           asp-action="Index" 
+                                           asp-route-sortOrder="@ViewData["CurrentSort"]"
+                                           asp-route-pageNumber="@(Model.Users.PageIndex + 1)"
+                                           asp-route-currentFilter="@ViewData["CurrentFilter"]"
+                                           asp-route-pageSize="@ViewData["PageSize"]">
+                                            Siguiente
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                        
+                        <div class="text-center text-muted">
+                            Mostrando página @Model.Users.PageIndex de @Model.Users.TotalPages 
+                            (@Model.Users.TotalCount usuarios en total)
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-people fs-1 text-muted"></i>
+                        <h5 class="mt-3">No se encontraron usuarios</h5>
+                        <p class="text-muted">
+                            @if (!string.IsNullOrEmpty(Model.SearchTerm))
+                            {
+                                @:No hay usuarios que coincidan con tu búsqueda.
+                            }
+                            else
+                            {
+                                @:No hay usuarios registrados en el sistema.
+                            }
+                        </p>
+                        @if (!string.IsNullOrEmpty(Model.SearchTerm))
+                        {
+                            <a href="@Url.Action("Index", "Users")" class="btn btn-outline-primary mt-2">
+                                <i class="bi bi-arrow-clockwise me-2"></i>
+                                Mostrar todos los usuarios
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="@Url.Action("Create", "Users")" class="btn btn-primary mt-2">
+                                <i class="bi bi-person-plus me-2"></i>
+                                Crear primer usuario
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Container -->
+<div id="modalContainer"></div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+
+            // Select all checkbox
+            $('#selectAll').on('change', function() {
+                $('tbody input[type="checkbox"]').prop('checked', this.checked);
+            });
+        });
+
+        function toggleStatus(userId) {
+            if (!confirm('¿Estás seguro de que deseas cambiar el estado de este usuario?')) {
+                return;
+            }
+
+            $.post('@Url.Action("ToggleStatus", "Users")', { id: userId })
+                .done(function(response) {
+                    if (response.success) {
+                        showToast('success', response.message);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showToast('error', response.message);
+                    }
+                })
+                .fail(function() {
+                    showToast('error', 'Error al cambiar el estado del usuario');
+                });
+        }
+
+        function unlockAccount(userId) {
+            if (!confirm('¿Estás seguro de que deseas desbloquear esta cuenta?')) {
+                return;
+            }
+
+            $.post('@Url.Action("UnlockAccount", "Users")', { id: userId })
+                .done(function(response) {
+                    if (response.success) {
+                        showToast('success', response.message);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showToast('error', response.message);
+                    }
+                })
+                .fail(function() {
+                    showToast('error', 'Error al desbloquear la cuenta');
+                });
+        }
+
+        function openCreateUserModal() {
+            $.get('@Url.Action("Create", "Users")')
+                .done(function(response) {
+                    $('#modalContainer').html(response);
+                    var modal = new bootstrap.Modal(document.getElementById('createUserModal'));
+                    modal.show();
+                    
+                    // Initialize form validation
+                    initializeModalValidation('#createUserForm');
+                })
+                .fail(function() {
+                    showToast('error', 'Error al cargar el formulario');
+                });
+        }
+
+        function openEditUserModal(userId) {
+            $.get('@Url.Action("Edit", "Users")/' + userId)
+                .done(function(response) {
+                    $('#modalContainer').html(response);
+                    var modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+                    modal.show();
+                    
+                    // Initialize form validation
+                    initializeModalValidation('#editUserForm');
+                })
+                .fail(function() {
+                    showToast('error', 'Error al cargar el formulario');
+                });
+        }
+
+        function openUserDetailsModal(userId) {
+            $.get('@Url.Action("Details", "Users")/' + userId)
+                .done(function(response) {
+                    $('#modalContainer').html(response);
+                    var modal = new bootstrap.Modal(document.getElementById('userDetailsModal'));
+                    modal.show();
+                    
+                    // Initialize tooltips in the modal
+                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('#userDetailsModal [data-bs-toggle="tooltip"]'));
+                    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                        return new bootstrap.Tooltip(tooltipTriggerEl);
+                    });
+                })
+                .fail(function() {
+                    showToast('error', 'Error al cargar los detalles del usuario');
+                });
+        }
+
+        function initializeModalValidation(formSelector) {
+            $(formSelector).off('submit').on('submit', function(e) {
+                e.preventDefault();
+                
+                var form = $(this);
+                var submitButton = form.find('button[type="submit"]');
+                var originalText = submitButton.html();
+                
+                // Show loading state
+                submitButton.prop('disabled', true).html('<i class="spinner-border spinner-border-sm me-2"></i>Procesando...');
+                
+                // Clear previous validation errors
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.alert-danger').addClass('d-none');
+                
+                $.post(form.attr('action'), form.serialize())
+                    .done(function(response) {
+                        if (response.success) {
+                            showToast('success', response.message);
+                            
+                            // Close modal and refresh page
+                            var modalId = form.closest('.modal').attr('id');
+                            var modal = bootstrap.Modal.getInstance(document.getElementById(modalId));
+                            modal.hide();
+                            
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            showToast('error', response.message || 'Error en el procesamiento');
+                        }
+                    })
+                    .fail(function(xhr) {
+                        if (xhr.status === 200) {
+                            // Validation errors - update form
+                            var newFormHtml = $(xhr.responseText);
+                            form.html(newFormHtml.find('form').html());
+                            
+                            // Show validation summary
+                            var validationSummary = form.find('[data-valmsg-summary="true"]');
+                            if (validationSummary.find('li').length > 0) {
+                                validationSummary.removeClass('d-none');
+                            }
+                        } else {
+                            showToast('error', 'Error al procesar la solicitud');
+                        }
+                    })
+                    .always(function() {
+                        // Restore button state
+                        submitButton.prop('disabled', false).html(originalText);
+                    });
+            });
+        }
+
+        function showToast(type, message) {
+            // Create toast element
+            var toastHtml = `
+                <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+            
+            // Add toast container if it doesn't exist
+            if (!$('.toast-container').length) {
+                $('body').append('<div class="toast-container position-fixed bottom-0 end-0 p-3"></div>');
+            }
+            
+            // Add and show toast
+            var $toast = $(toastHtml);
+            $('.toast-container').append($toast);
+            var toast = new bootstrap.Toast($toast[0]);
+            toast.show();
+            
+            // Remove toast after hiding
+            $toast.on('hidden.bs.toast', function() {
+                $(this).remove();
+            });
+        }
+    </script>
+
+    <style>
+        .avatar-initials {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .table > tbody > tr:hover {
+            background-color: rgba(0, 115, 216, 0.02);
+        }
+        
+        .btn-group > .btn {
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .badge {
+            font-weight: 500;
+            padding: 0.35rem 0.65rem;
+        }
+    </style>
+}

@@ -1,0 +1,270 @@
+/* Documents Management Styles */
+/* Version: 1.0.0 */
+
+.tree-container {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.tree-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.tree-node {
+    margin: 2px 0;
+}
+
+.tree-node-content {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.tree-node-content:hover {
+    background-color: rgba(0, 115, 216, 0.1);
+}
+
+.expand-icon {
+    width: 16px;
+    margin-right: 4px;
+    transition: transform 0.2s;
+}
+
+.expand-spacer {
+    width: 20px;
+}
+
+.node-icon {
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.node-title {
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.tree-children {
+    margin-left: 20px;
+    border-left: 1px dashed #dee2e6;
+}
+
+.file-checkbox:checked ~ * {
+    background-color: rgba(0, 115, 216, 0.05);
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+}
+
+/* Filter highlighting */
+.node-title mark {
+    background-color: #fff3cd;
+    padding: 1px 2px;
+    border-radius: 2px;
+    font-weight: 500;
+}
+
+/* Filter input styling */
+#treeFilter:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Results counter styling */
+#filterResults {
+    font-size: 0.75rem;
+    margin-top: 2px;
+}
+
+/* Tree container adjustments for filter */
+.tree-container {
+    max-height: 500px;
+}
+
+/* Expand/collapse button styling */
+.btn-group-sm .btn {
+    border-radius: 3px;
+}
+
+.btn-group-sm .btn:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.btn-group-sm .btn:not(:first-child):not(:last-child) {
+    border-radius: 0;
+}
+
+.btn-group-sm .btn:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* Permissions-specific styling */
+.permission-checkbox {
+    cursor: pointer;
+}
+
+.permission-checkbox:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Tab content styling */
+.tab-content {
+    min-height: 500px;
+}
+
+/* Toast container positioning */
+.toast-container {
+    z-index: 1055;
+}
+
+/* File upload and modal styling */
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    flex-shrink: 0;
+}
+
+/* Document table styling */
+.table-hover tbody tr:hover {
+    --bs-table-hover-bg: rgba(0, 115, 216, 0.05);
+}
+
+/* Breadcrumb styling */
+.breadcrumb-item.active {
+    color: #6c757d;
+}
+
+/* Loading spinner styling */
+.spinner-border {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* Card header icons */
+.card-header i {
+    color: #0d6efd;
+}
+
+/* Permission matrix table styling */
+.permissions-table {
+    font-size: 0.9rem;
+}
+
+.permissions-table thead th {
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.permissions-table tbody tr.table-secondary {
+    --bs-table-bg: rgba(108, 117, 125, 0.1);
+}
+
+/* Tooltip styling for permission icons */
+.table thead th i {
+    font-size: 1.1rem;
+}
+
+/* File type icon styling */
+.file-icon {
+    width: 24px;
+    height: 24px;
+}
+
+/* Search filter result styling */
+.form-text small {
+    font-size: 0.8rem;
+}
+
+/* Tree expansion animation */
+.tree-children {
+    transition: max-height 0.3s ease-out;
+}
+
+/* Permission indicator colors */
+.permission-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+}
+
+.permission-indicator.granted {
+    background-color: #28a745;
+}
+
+.permission-indicator.denied {
+    background-color: #dc3545;
+}
+
+.permission-indicator.inherited {
+    background-color: #6c757d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .tree-container {
+        max-height: 400px;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.8rem;
+    }
+    
+    .node-title {
+        font-size: 0.8rem;
+    }
+}
+
+/* Folder row styling in file list */
+.table-row-folder {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.table-row-folder:hover {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+}
+
+/* Breadcrumb clickable items */
+.breadcrumb-item a {
+    color: #0d6efd;
+}
+
+.breadcrumb-item a:hover {
+    color: #0b5ed7;
+    text-decoration: underline !important;
+}
+
+/* Dark theme support (if needed) */
+@media (prefers-color-scheme: dark) {
+    .tree-node-content:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .tree-children {
+        border-left-color: #6c757d;
+    }
+    
+    .node-title mark {
+        background-color: #495057;
+        color: #fff;
+    }
+    
+    .table-row-folder {
+        background-color: rgba(255, 193, 7, 0.2);
+    }
+    
+    .table-row-folder:hover {
+        background-color: rgba(255, 193, 7, 0.3) !important;
+    }
+}

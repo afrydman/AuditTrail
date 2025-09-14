@@ -1,0 +1,212 @@
+<div class="modal fade" id="createFolderModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="createFolderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="createFolderForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="parentCategoryId" name="parentCategoryId" value="">
+                
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="createFolderModalLabel">
+                        <i class="bi bi-folder-plus me-2"></i>
+                        Crear Nueva Carpeta
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Folder Information -->
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3 text-success">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Información de la Carpeta
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="folderName" class="form-label">
+                                <span class="text-danger">*</span> Nombre de la Carpeta
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-folder"></i>
+                                </span>
+                                <input type="text" class="form-control" id="folderName" name="folderName" required placeholder="Mi Nueva Carpeta">
+                            </div>
+                            <div class="form-text">Utiliza un nombre descriptivo para identificar fácilmente la carpeta.</div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="folderDescription" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="folderDescription" name="description" rows="3" placeholder="Descripción opcional de la carpeta..."></textarea>
+                            <div class="form-text">Proporciona una descripción para explicar el propósito de la carpeta.</div>
+                        </div>
+                        
+                        <!-- Parent Folder -->
+                        <div class="col-12 mt-4">
+                            <h6 class="border-bottom pb-2 mb-3 text-success">
+                                <i class="bi bi-folder-symlink me-2"></i>
+                                Ubicación
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Carpeta Padre</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-folder-symlink"></i>
+                                </span>
+                                <input type="text" class="form-control" id="parentFolderName" readonly placeholder="Raíz (sin carpeta padre)">
+                                <button type="button" class="btn btn-outline-secondary" onclick="clearParentFolder()">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Si no seleccionas una carpeta padre, se creará en la raíz del sistema.</div>
+                        </div>
+                        
+                        <!-- Preview -->
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body py-2">
+                                    <small class="text-muted">
+                                        <strong>Vista previa de la ruta:</strong><br>
+                                        <span id="folderPathPreview">/</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Validation Summary -->
+                    <div id="folderErrors" class="alert alert-danger mt-3 d-none" role="alert"></div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success" id="createFolderBtn">
+                        <i class="bi bi-folder-plus me-2"></i>
+                        Crear Carpeta
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#folderName').on('input', function() {
+        updateFolderPathPreview();
+    });
+
+    $('#createFolderForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const folderName = $('#folderName').val().trim();
+        if (!folderName) {
+            showFolderError('El nombre de la carpeta es obligatorio');
+            return;
+        }
+        
+        const createBtn = $('#createFolderBtn');
+        const originalText = createBtn.html();
+        createBtn.prop('disabled', true).html('<i class="spinner-border spinner-border-sm me-2"></i>Creando...');
+        $('#folderErrors').addClass('d-none');
+        
+        const postData = {
+            folderName: folderName,
+            description: $('#folderDescription').val(),
+            parentCategoryId: $('#parentCategoryId').val() || null,
+            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+        };
+        
+        console.log('Creating folder with data:', postData);
+        
+        $.post('@Url.Action("CreateFolder", "Documents")', postData)
+        .done(function(response) {
+            if (response.success) {
+                showToast('success', response.message);
+                
+                // Close modal and refresh tree
+                var modal = bootstrap.Modal.getInstance(document.getElementById('createFolderModal'));
+                modal.hide();
+                
+                // Refresh the tree with a slight delay to ensure database consistency
+                console.log('Refreshing tree after folder creation...');
+                setTimeout(function() {
+                    if (window.loadTreeData) {
+                        window.loadTreeData();
+                    } else {
+                        console.error('loadTreeData function not found');
+                        // Fallback: reload the page
+                        window.location.reload();
+                    }
+                }, 500);
+            } else {
+                showFolderError(response.message);
+            }
+        })
+        .fail(function(xhr, status, error) {
+            console.error('AJAX error:', xhr, status, error);
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                showFolderError(xhr.responseJSON.message);
+            } else {
+                showFolderError('Error al crear la carpeta: ' + error);
+            }
+        })
+        .always(function() {
+            createBtn.prop('disabled', false).html(originalText);
+        });
+    });
+
+    function showFolderError(message) {
+        $('#folderErrors').removeClass('d-none').text(message);
+    }
+
+    function clearParentFolder() {
+        $('#parentCategoryId').val('');
+        $('#parentFolderName').val('');
+        updateFolderPathPreview();
+    }
+
+    function updateFolderPathPreview() {
+        const folderName = $('#folderName').val().trim();
+        const parentPath = $('#parentFolderName').val();
+        
+        let preview = '/';
+        if (parentPath && parentPath !== '/Raíz/') {
+            // Parent path already includes leading and trailing slashes
+            preview = parentPath;
+            if (!preview.endsWith('/')) {
+                preview += '/';
+            }
+        }
+        if (folderName) {
+            if (preview === '/') {
+                preview += folderName + '/';
+            } else {
+                preview += folderName + '/';
+            }
+        }
+        
+        $('#folderPathPreview').text(preview);
+    }
+
+    // Reset form when modal is hidden
+    $('#createFolderModal').on('hidden.bs.modal', function() {
+        $('#createFolderForm')[0].reset();
+        $('#folderErrors').addClass('d-none');
+        clearParentFolder();
+        updateFolderPathPreview();
+    });
+</script>
+
+<style>
+    .modal-footer {
+        border-top: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        flex-shrink: 0;
+    }
+</style>

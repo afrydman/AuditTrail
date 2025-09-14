@@ -80,6 +80,13 @@ public class AuditTrailDbContext : DbContext
             entity.Property(e => e.FileName).IsRequired().HasMaxLength(255);
             entity.Property(e => e.FilePath).IsRequired().HasMaxLength(500);
             
+            // FileEntity uses UploadedDate/UploadedBy instead of CreatedDate/CreatedBy
+            // And doesn't have ModifiedDate/ModifiedBy columns in the database
+            entity.Ignore(e => e.CreatedDate);
+            entity.Ignore(e => e.CreatedBy);
+            entity.Ignore(e => e.ModifiedDate);
+            entity.Ignore(e => e.ModifiedBy);
+            
             entity.HasOne(e => e.Category)
                 .WithMany(c => c.Files)
                 .HasForeignKey(e => e.CategoryId);
@@ -94,6 +101,12 @@ public class AuditTrailDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("CategoryId");
             entity.Property(e => e.CategoryPath).IsRequired().HasMaxLength(500);
             entity.HasIndex(e => e.CategoryPath).IsUnique();
+            
+            // FileCategories table doesn't have ModifiedDate/ModifiedBy columns - ignore them
+            // Also ignore CreatedDate since database handles it with SYSUTCDATETIME() default
+            entity.Ignore(e => e.CreatedDate);
+            entity.Ignore(e => e.ModifiedDate);
+            entity.Ignore(e => e.ModifiedBy);
             
             entity.HasOne(e => e.ParentCategory)
                 .WithMany(c => c.SubCategories)
@@ -168,15 +181,24 @@ public class AuditTrailDbContext : DbContext
         foreach (var entry in entries)
         {
             var entity = (BaseEntity)entry.Entity;
+            var entityType = entry.Entity.GetType();
             
             if (entry.State == EntityState.Added)
             {
-                entity.CreatedDate = DateTime.UtcNow;
+                // Skip entities that don't use CreatedDate (FileCategory uses database default, FileEntity uses UploadedDate)
+                if (entityType.Name != nameof(FileCategory) && entityType.Name != nameof(FileEntity))
+                {
+                    entity.CreatedDate = DateTime.UtcNow;
+                }
             }
             
             if (entry.State == EntityState.Modified)
             {
-                entity.ModifiedDate = DateTime.UtcNow;
+                // Skip entities that don't use ModifiedDate (FileCategory and FileEntity don't support it in DB)
+                if (entityType.Name != nameof(FileCategory) && entityType.Name != nameof(FileEntity))
+                {
+                    entity.ModifiedDate = DateTime.UtcNow;
+                }
             }
         }
 

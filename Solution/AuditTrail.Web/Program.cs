@@ -8,6 +8,8 @@ using AuditTrail.Infrastructure.Repositories;
 using AuditTrail.Infrastructure.Interceptors;
 using AuditTrail.Core.Interfaces;
 using AuditTrail.Web.Middleware;
+using MudBlazor.Services;
+using AuditTrail.Infrastructure.Services;
 
 // Configure Serilog before creating the builder
 Log.Logger = new LoggerConfiguration()
@@ -43,6 +45,9 @@ builder.Host.UseSerilog();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// Add MudBlazor services
+builder.Services.AddMudServices();
+
 // Add session support
 builder.Services.AddSession(options =>
 {
@@ -77,8 +82,22 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuditRepository, AuditRepository>();
 
+// Configure File Storage Service based on configuration
+var fileStorageProvider = builder.Configuration.GetValue<string>("FileStorage:Provider", "Local");
+if (fileStorageProvider.Equals("S3", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddScoped<IFileStorageService, S3FileStorageService>();
+}
+else
+{
+    builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+}
+
 // Configure current user service
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+// Configure permission service
+builder.Services.AddScoped<IPermissionService, PermissionService>();
 
 // Configure Cookie Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

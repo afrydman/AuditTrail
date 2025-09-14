@@ -1,0 +1,308 @@
+@model AuditTrail.Web.Models.DocumentsIndexViewModel
+@{
+    ViewData["Title"] = "Gestión de Documentos";
+    ViewData["Breadcrumb"] = "<li class=\"breadcrumb-item active\" aria-current=\"page\">Gestión de Documentos</li>";
+}
+
+@Html.AntiForgeryToken()
+
+<div class="row">
+    <div class="col-12">
+        <!-- Page header -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h4 class="mb-1">
+                            <i class="bi bi-folder-fill text-primary me-2"></i>
+                            Gestión de Documentos
+                        </h4>
+                        <p class="text-muted mb-0">Explora y gestiona documentos de manera jerárquica</p>
+                    </div>
+                    <div class="col-auto">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-primary" onclick="openUploadModal()">
+                                <i class="bi bi-cloud-upload me-2"></i>
+                                Subir Documento
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="createNewFolder()">
+                                <i class="bi bi-folder-plus me-2"></i>
+                                Nueva Carpeta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <!-- Tree Explorer -->
+                    <div class="col-md-4 col-lg-3">
+                        <div class="border-end pe-3" style="min-height: 600px;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-diagram-3 me-2"></i>
+                                    Explorador de Carpetas
+                                </h6>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="expandAllNodes()" data-bs-toggle="tooltip" title="Expandir Todo">
+                                        <i class="bi bi-arrows-expand"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="collapseAllNodes()" data-bs-toggle="tooltip" title="Contraer Todo">
+                                        <i class="bi bi-arrows-collapse"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="clearTreeFilter()" data-bs-toggle="tooltip" title="Limpiar Filtro">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Search Filter -->
+                            <div class="mb-3">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="treeFilter" placeholder="Buscar carpetas y archivos..." autocomplete="off">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="clearTreeFilter()">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">
+                                    <small id="filterResults" class="text-muted"></small>
+                                </div>
+                            </div>
+                            
+                            <div id="documentTree" class="tree-container">
+                                <!-- MudBlazor TreeView will be rendered here -->
+                                <div class="d-flex justify-content-center p-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File Details Panel -->
+                    <div class="col-md-8 col-lg-9">
+                        <div class="ps-3">
+                            <!-- Tab Navigation -->
+                            <ul class="nav nav-tabs" id="documentTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents-tabpane" type="button" role="tab">
+                                        <i class="bi bi-files me-2"></i>Documentos
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="permissions-tab" data-bs-toggle="tab" data-bs-target="#permissions-tabpane" type="button" role="tab">
+                                        <i class="bi bi-shield-lock me-2"></i>Permisos
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <!-- Tab Content -->
+                            <div class="tab-content" id="documentTabContent">
+                                <!-- Documents Tab -->
+                                <div class="tab-pane fade show active" id="documents-tabpane" role="tabpanel">
+                                    <!-- Toolbar -->
+                                    <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
+                                        <div class="d-flex align-items-center">
+                                            <nav aria-label="breadcrumb">
+                                                <ol class="breadcrumb mb-0" id="fileBreadcrumb">
+                                                    <li class="breadcrumb-item">
+                                                        <i class="bi bi-house-door"></i>
+                                                        <span>Raíz</span>
+                                                    </li>
+                                                </ol>
+                                            </nav>
+                                        </div>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="toggleView('grid')" id="gridViewBtn">
+                                                <i class="bi bi-grid-3x3-gap"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary active" onclick="toggleView('list')" id="listViewBtn">
+                                                <i class="bi bi-list-ul"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                            <!-- Content Area -->
+                            <div id="contentArea">
+                                <!-- Welcome message when no item is selected -->
+                                <div id="welcomeMessage" class="text-center py-5">
+                                    <i class="bi bi-folder2-open fs-1 text-muted"></i>
+                                    <h5 class="mt-3">Selecciona una carpeta o archivo</h5>
+                                    <p class="text-muted">
+                                        Utiliza el explorador de la izquierda para navegar por la estructura de documentos
+                                    </p>
+                                </div>
+
+                                <!-- Loading state -->
+                                <div id="loadingContent" class="text-center py-5 d-none">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando contenido...</span>
+                                    </div>
+                                </div>
+
+                                <!-- Folder contents -->
+                                <div id="folderContents" class="d-none">
+                                    <div id="listView">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th scope="col" style="width: 40px;">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" id="selectAllFiles">
+                                                            </div>
+                                                        </th>
+                                                        <th scope="col">Nombre</th>
+                                                        <th scope="col">Tipo</th>
+                                                        <th scope="col">Tamaño</th>
+                                                        <th scope="col">Modificado</th>
+                                                        <th scope="col" class="text-end">Acciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="fileListBody">
+                                                    <!-- Dynamic content will be inserted here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <div id="gridView" class="d-none">
+                                        <div class="row" id="fileGridContainer">
+                                            <!-- Dynamic grid items will be inserted here -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- File details panel -->
+                                <div id="fileDetails" class="d-none">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">
+                                                <i class="bi bi-file-earmark-text me-2"></i>
+                                                <span id="fileDetailsTitle">Detalles del Archivo</span>
+                                            </h6>
+                                        </div>
+                                        <div class="card-body" id="fileDetailsContent">
+                                            <!-- File details content -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                                </div>
+
+                                <!-- Permissions Tab -->
+                                <div class="tab-pane fade" id="permissions-tabpane" role="tabpanel">
+                                    <div class="mt-3">
+                                        <div id="permissionsContent">
+                                            <!-- Default message when no folder is selected -->
+                                            <div id="permissionsWelcome" class="text-center py-5">
+                                                <i class="bi bi-shield-lock fs-1 text-muted"></i>
+                                                <h5 class="mt-3">Gestión de Permisos</h5>
+                                                <p class="text-muted">
+                                                    Selecciona una carpeta del explorador para gestionar sus permisos
+                                                </p>
+                                            </div>
+
+                                            <!-- Permissions matrix -->
+                                            <div id="permissionsMatrix" class="d-none">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h6 class="mb-0">
+                                                            <i class="bi bi-shield-lock me-2"></i>
+                                                            Permisos para: <span id="permissionsFolderName">Carpeta</span>
+                                                        </h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm table-hover">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th scope="col">Rol</th>
+                                                                        <th scope="col" class="text-center">
+                                                                            <i class="bi bi-eye" data-bs-toggle="tooltip" title="Ver"></i>
+                                                                        </th>
+                                                                        <th scope="col" class="text-center">
+                                                                            <i class="bi bi-download" data-bs-toggle="tooltip" title="Descargar"></i>
+                                                                        </th>
+                                                                        <th scope="col" class="text-center">
+                                                                            <i class="bi bi-upload" data-bs-toggle="tooltip" title="Subir"></i>
+                                                                        </th>
+                                                                        <th scope="col" class="text-center">
+                                                                            <i class="bi bi-trash" data-bs-toggle="tooltip" title="Eliminar"></i>
+                                                                        </th>
+                                                                        <th scope="col" class="text-center">
+                                                                            <i class="bi bi-pencil" data-bs-toggle="tooltip" title="Editar Metadatos"></i>
+                                                                        </th>
+                                                                        <th scope="col" class="text-center">
+                                                                            <i class="bi bi-shield-check" data-bs-toggle="tooltip" title="Administrar"></i>
+                                                                        </th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="permissionsTableBody">
+                                                                    <!-- Dynamic content will be inserted here -->
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                        
+                                                        <div class="mt-3">
+                                                            <small class="text-muted">
+                                                                <i class="bi bi-info-circle me-1"></i>
+                                                                Los permisos se heredan automáticamente a subcarpetas y archivos. 
+                                                                Los permisos directos tienen prioridad sobre los heredados.
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Loading state for permissions -->
+                                            <div id="permissionsLoading" class="text-center py-5 d-none">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Cargando permisos...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Container -->
+<div id="modalContainer"></div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/documents.css?v=1.1.0" />
+}
+
+@section Scripts {
+    <script src="~/js/documents.js?v=1.2.0"></script>
+    <script>
+        // Initialize server-side variables
+        window.serverUrls = {
+            getTreeData: '@Url.Action("GetTreeData", "Documents")',
+            getFolderContents: '@Url.Action("GetFolderContents", "Documents")',
+            uploadFile: '@Url.Action("UploadFile", "Documents")',
+            createFolder: '@Url.Action("CreateFolder", "Documents")',
+            downloadFile: '@Url.Action("DownloadFile", "Documents")',
+            deleteFile: '@Url.Action("DeleteFile", "Documents")',
+            getFolderPermissions: '@Url.Action("GetFolderPermissions", "Documents")',
+            updateFolderPermissions: '@Url.Action("UpdateFolderPermissions", "Documents")',
+            fileAuditTrail: '@Url.Action("FileAuditTrail", "Documents")',
+            getFileAuditData: '@Url.Action("GetFileAuditData", "Documents")'
+        };
+    </script>
+}

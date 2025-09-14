@@ -1,0 +1,251 @@
+<div class="modal fade" id="uploadFileModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="uploadFileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="uploadFileForm" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="selectedCategoryId" name="categoryId" value="">
+                
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="uploadFileModalLabel">
+                        <i class="bi bi-cloud-upload me-2"></i>
+                        Subir Documento
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- File Selection -->
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="bi bi-file-earmark-arrow-up me-2"></i>
+                                Selección de Archivo
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="fileInput" class="form-label">
+                                <span class="text-danger">*</span> Archivo
+                            </label>
+                            <input type="file" class="form-control" id="fileInput" name="file" required>
+                            <div class="form-text">
+                                Tamaño máximo: 100MB. Formatos permitidos: PDF, Word, Excel, PowerPoint, imágenes, texto, archivos comprimidos.
+                            </div>
+                            <div id="filePreview" class="mt-3 d-none">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-file-earmark fs-2 text-primary me-3" id="fileIcon"></i>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1" id="fileName">Nombre del archivo</h6>
+                                                <div class="d-flex justify-content-between">
+                                                    <small class="text-muted" id="fileSize">Tamaño</small>
+                                                    <small class="text-muted" id="fileType">Tipo</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Destination Folder -->
+                        <div class="col-12 mt-4">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="bi bi-folder me-2"></i>
+                                Carpeta de Destino
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Carpeta</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-folder"></i>
+                                </span>
+                                <input type="text" class="form-control" id="selectedFolderName" readonly placeholder="Selecciona una carpeta del árbol...">
+                                <button type="button" class="btn btn-outline-secondary" onclick="clearSelectedFolder()">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Si no seleccionas una carpeta, el archivo se guardará en la raíz.</div>
+                        </div>
+                        
+                        <!-- Upload Progress -->
+                        <div class="col-12">
+                            <div class="progress d-none" id="uploadProgress">
+                                <div class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Validation Summary -->
+                    <div id="uploadErrors" class="alert alert-danger mt-3 d-none" role="alert"></div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="uploadBtn">
+                        <i class="bi bi-cloud-upload me-2"></i>
+                        Subir Archivo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#fileInput').on('change', function() {
+        const file = this.files[0];
+        if (file) {
+            // Show file preview
+            $('#fileName').text(file.name);
+            $('#fileSize').text(formatFileSize(file.size));
+            $('#fileType').text(file.type || 'Unknown');
+            
+            // Set appropriate icon
+            const extension = file.name.split('.').pop().toLowerCase();
+            const icon = getFileIconClass(extension);
+            $('#fileIcon').removeClass().addClass(`bi ${icon} fs-2 text-primary me-3`);
+            
+            $('#filePreview').removeClass('d-none');
+            $('#uploadErrors').addClass('d-none');
+        } else {
+            $('#filePreview').addClass('d-none');
+        }
+    });
+
+    $('#uploadFileForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const file = $('#fileInput')[0].files[0];
+        if (!file) {
+            showUploadError('Por favor selecciona un archivo');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const categoryId = $('#selectedCategoryId').val();
+        if (categoryId) {
+            formData.append('categoryId', categoryId);
+        }
+        
+        // Add anti-forgery token
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        formData.append('__RequestVerificationToken', token);
+        
+        // Show progress
+        const uploadBtn = $('#uploadBtn');
+        const originalText = uploadBtn.html();
+        uploadBtn.prop('disabled', true).html('<i class="spinner-border spinner-border-sm me-2"></i>Subiendo...');
+        $('#uploadProgress').removeClass('d-none');
+        $('#uploadErrors').addClass('d-none');
+        
+        $.ajax({
+            url: '@Url.Action("UploadFile", "Documents")',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            xhr: function() {
+                const xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        $('.progress-bar').css('width', percentComplete + '%').attr('aria-valuenow', percentComplete);
+                    }
+                });
+                return xhr;
+            }
+        })
+        .done(function(response) {
+            if (response.success) {
+                showToast('success', response.message);
+                
+                // Close modal and refresh tree
+                var modal = bootstrap.Modal.getInstance(document.getElementById('uploadFileModal'));
+                modal.hide();
+                
+                // Refresh the tree and folder contents
+                loadTreeData();
+                if (currentFolderId) {
+                    loadFolderContents(currentFolderId, 'Carpeta actual');
+                }
+            } else {
+                showUploadError(response.message);
+            }
+        })
+        .fail(function(xhr) {
+            showUploadError('Error al subir el archivo');
+        })
+        .always(function() {
+            uploadBtn.prop('disabled', false).html(originalText);
+            $('#uploadProgress').addClass('d-none');
+            $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
+        });
+    });
+
+    function showUploadError(message) {
+        $('#uploadErrors').removeClass('d-none').text(message);
+    }
+
+    function clearSelectedFolder() {
+        $('#selectedCategoryId').val('');
+        $('#selectedFolderName').val('');
+    }
+
+    function formatFileSize(bytes) {
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        if (bytes === 0) return '0 B';
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    function getFileIconClass(extension) {
+        const iconMap = {
+            'pdf': 'bi-file-earmark-pdf',
+            'doc': 'bi-file-earmark-word',
+            'docx': 'bi-file-earmark-word',
+            'xls': 'bi-file-earmark-excel',
+            'xlsx': 'bi-file-earmark-excel',
+            'ppt': 'bi-file-earmark-ppt',
+            'pptx': 'bi-file-earmark-ppt',
+            'jpg': 'bi-file-earmark-image',
+            'jpeg': 'bi-file-earmark-image',
+            'png': 'bi-file-earmark-image',
+            'gif': 'bi-file-earmark-image',
+            'txt': 'bi-file-earmark-text',
+            'zip': 'bi-file-earmark-zip',
+            'rar': 'bi-file-earmark-zip'
+        };
+        
+        return iconMap[extension] || 'bi-file-earmark';
+    }
+</script>
+
+<style>
+    .modal-dialog-scrollable .modal-content {
+        max-height: 90vh;
+    }
+    
+    .modal-dialog-scrollable .modal-body {
+        max-height: calc(90vh - 200px);
+        overflow-y: auto;
+    }
+    
+    .modal-footer {
+        border-top: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        flex-shrink: 0;
+    }
+    
+    .progress {
+        height: 6px;
+    }
+</style>

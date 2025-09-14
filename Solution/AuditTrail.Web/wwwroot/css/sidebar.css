@@ -1,0 +1,362 @@
+/* Enhanced Sidebar Styles - Professional Navigation */
+
+/* Override existing sidebar styles with modern enhancements */
+
+/* Enhanced Sidebar Wrapper - Override existing styles */
+.sidebar-wrapper {
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fc 100%) !important;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.08) !important;
+    border-right: 1px solid #e3e6f0 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    overflow: hidden !important;
+}
+
+/* Collapsed state - icon only - use existing width */
+.page-wrapper.pinned:not(.sidebar-hovered) .sidebar-wrapper {
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fc 100%) !important;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Sidebar content container */
+.sidebar-content {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem 0;
+    position: relative;
+}
+
+/* Custom scrollbar for sidebar */
+.sidebar-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 115, 216, 0.3);
+    border-radius: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 115, 216, 0.5);
+}
+
+/* Enhanced menu styling */
+.sidebar-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-menu ul > li {
+    position: relative;
+    margin: 0.25rem 0;
+}
+
+/* Enhanced menu links */
+.sidebar-menu ul > li > a {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    border-radius: 0 25px 25px 0;
+    margin-right: 12px;
+    text-decoration: none;
+    color: #5a5c69;
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Enhanced icons */
+.sidebar-menu ul > li > a > i {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    margin-right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #f8f9fc 0%, #e3e6f0 100%);
+    color: #5a5c69;
+    position: relative;
+}
+
+/* Menu text */
+.sidebar-menu ul > li > a .menu-text {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Hover effects */
+.sidebar-menu ul > li:hover > a {
+    background: linear-gradient(135deg, rgba(0, 115, 216, 0.05) 0%, rgba(0, 115, 216, 0.02) 100%);
+    color: #0073d8;
+    transform: translateX(4px);
+}
+
+.sidebar-menu ul > li:hover > a > i {
+    background: linear-gradient(135deg, #0073d8 0%, #005bb5 100%);
+    color: white;
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0, 115, 216, 0.3);
+}
+
+/* Active/Current page styling */
+.sidebar-menu ul > li.current-page > a {
+    background: linear-gradient(135deg, #0073d8 0%, #005bb5 100%);
+    color: white;
+    box-shadow: 0 4px 20px rgba(0, 115, 216, 0.3);
+    transform: translateX(4px);
+}
+
+.sidebar-menu ul > li.current-page > a > i {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: scale(1.1);
+}
+
+.sidebar-menu ul > li.current-page > a .menu-text {
+    font-weight: 600;
+}
+
+/* Collapsed state - hide text and adjust spacing for 74px width */
+.page-wrapper.pinned:not(.sidebar-hovered) .sidebar-menu ul > li > a {
+    padding: 8px !important;
+    margin-right: 0 !important;
+    justify-content: center !important;
+    border-radius: 8px !important;
+    margin: 0.25rem 4px !important;
+}
+
+.page-wrapper.pinned:not(.sidebar-hovered) .sidebar-menu ul > li > a > i {
+    margin-right: 0 !important;
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1.2rem !important;
+}
+
+.page-wrapper.pinned:not(.sidebar-hovered) .sidebar-menu ul .menu-text {
+    opacity: 0;
+    transform: translateX(-20px);
+    position: absolute;
+    pointer-events: none;
+}
+
+/* Tooltip for collapsed state */
+.page-wrapper.pinned:not(.sidebar-hovered) .sidebar-menu ul > li {
+    position: relative;
+}
+
+.page-wrapper.pinned:not(.sidebar-hovered) .sidebar-menu ul > li::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 82px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(45, 45, 45, 0.95);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.page-wrapper.pinned:not(.sidebar-hovered) .sidebar-menu ul > li::before {
+    content: '';
+    position: absolute;
+    left: 74px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 6px 8px 6px 0;
+    border-color: transparent rgba(45, 45, 45, 0.95) transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.page-wrapper.pinned:not(.sidebar-hovered) .sidebar-menu ul > li:hover::after,
+.page-wrapper.pinned:not(.sidebar-hovered) .sidebar-menu ul > li:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Dropdown indicators */
+.sidebar-menu ul > li.sidebar-dropdown > a::after {
+    content: '\f285';
+    font-family: 'bootstrap-icons';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    color: #8e8e8e;
+    transition: all 0.3s ease;
+}
+
+.sidebar-menu ul > li.sidebar-dropdown.active > a::after {
+    transform: translateY(-50%) rotate(180deg);
+    color: #0073d8;
+}
+
+.page-wrapper.pinned:not(.sidebar-hovered) .sidebar-menu ul > li.sidebar-dropdown > a::after {
+    display: none;
+}
+
+/* Submenu styling */
+.sidebar-submenu {
+    background: rgba(0, 115, 216, 0.02);
+    border-radius: 0 15px 15px 0;
+    margin: 0.5rem 12px 0 0;
+    padding: 8px 0;
+    overflow: hidden;
+    max-height: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+}
+
+.sidebar-menu ul > li.sidebar-dropdown.active .sidebar-submenu {
+    max-height: 300px;
+    opacity: 1;
+}
+
+.sidebar-submenu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-submenu li {
+    margin: 0;
+}
+
+.sidebar-submenu li > a {
+    padding: 8px 20px 8px 60px;
+    display: block;
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 0 20px 20px 0;
+    margin-right: 12px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.sidebar-submenu li > a::before {
+    content: '';
+    position: absolute;
+    left: 35px;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    background: #c4c4c4;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    transition: all 0.3s ease;
+}
+
+.sidebar-submenu li > a:hover {
+    background: rgba(0, 115, 216, 0.08);
+    color: #0073d8;
+    transform: translateX(4px);
+}
+
+.sidebar-submenu li > a:hover::before {
+    background: #0073d8;
+    transform: translateY(-50%) scale(1.3);
+}
+
+/* Hide submenu in collapsed state */
+.page-wrapper.pinned:not(.sidebar-hovered) .sidebar-submenu {
+    display: none !important;
+}
+
+/* Enhanced mobile responsiveness - works with existing styles */
+@media screen and (max-width: 991.98px) {
+    .page-wrapper.toggled .sidebar-wrapper {
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.2) !important;
+    }
+}
+
+/* Brand area enhancement */
+.sidebar-brand {
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid #e3e6f0;
+    margin-bottom: 1rem;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(0, 115, 216, 0.05) 0%, transparent 100%);
+}
+
+.page-wrapper.pinned:not(.sidebar-hovered) .sidebar-brand {
+    padding: 1rem 0.5rem;
+}
+
+/* Loading animation for smooth transitions */
+.sidebar-menu > li > a {
+    transform-origin: left center;
+}
+
+.sidebar-wrapper * {
+    will-change: transform, opacity;
+}
+
+/* Enhanced focus states for accessibility */
+.sidebar-menu > li > a:focus {
+    outline: 2px solid #0073d8;
+    outline-offset: -2px;
+    background: linear-gradient(135deg, rgba(0, 115, 216, 0.1) 0%, rgba(0, 115, 216, 0.05) 100%);
+}
+
+/* Smooth animations for all interactive elements */
+.sidebar-wrapper,
+.sidebar-menu > li > a,
+.sidebar-menu > li > a > i,
+.sidebar-submenu {
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+}
+
+/* Dark mode support (if needed in future) */
+@media (prefers-color-scheme: dark) {
+    .sidebar-wrapper {
+        background: linear-gradient(180deg, #1e1e2e 0%, #181825 100%);
+        border-right-color: #313244;
+    }
+    
+    .sidebar-menu > li > a {
+        color: #cdd6f4;
+    }
+    
+    .sidebar-menu ul > li > a > i {
+        background: linear-gradient(135deg, #313244 0%, #45475a 100%);
+        color: #cdd6f4;
+    }
+}

@@ -13,4 +13,6 @@ public interface IUserRepository : IRepository<User>
     Task UnlockUserAccountAsync(Guid userId);
     Task RecordLoginAttemptAsync(string username, string ipAddress, bool isSuccessful, string? failureReason = null);
     Task<int> GetFailedLoginAttemptsAsync(string username, TimeSpan period);
+    Task<IEnumerable<User>> GetAllWithRolesAsync();
+    Task<User?> GetByIdWithRoleAsync(Guid userId);
 }

@@ -1,0 +1,238 @@
+@model AuditTrail.Web.Models.CreateUserViewModel
+
+<div class="modal fade" id="createUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <form id="createUserForm" asp-action="Create" asp-controller="Users" method="post">
+                @Html.AntiForgeryToken()
+                
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="createUserModalLabel">
+                        <i class="bi bi-person-plus me-2"></i>
+                        Crear Nuevo Usuario
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Account Information Section -->
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="bi bi-person-circle me-2"></i>
+                                Información de la Cuenta
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="Username" class="form-label">
+                                <span class="text-danger">*</span> @Html.DisplayNameFor(m => m.Username)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-at"></i>
+                                </span>
+                                <input asp-for="Username" class="form-control" placeholder="nombredeusuario" />
+                            </div>
+                            <span asp-validation-for="Username" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">
+                                <span class="text-danger">*</span> @Html.DisplayNameFor(m => m.Email)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-envelope"></i>
+                                </span>
+                                <input asp-for="Email" class="form-control" placeholder="usuario@ejemplo.com" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label">
+                                <span class="text-danger">*</span> @Html.DisplayNameFor(m => m.Password)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock"></i>
+                                </span>
+                                <input asp-for="Password" class="form-control" type="password" />
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('Password', this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                            <div class="form-text">
+                                Mínimo 8 caracteres, debe incluir mayúsculas, minúsculas, números y caracteres especiales
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="ConfirmPassword" class="form-label">
+                                <span class="text-danger">*</span> @Html.DisplayNameFor(m => m.ConfirmPassword)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock-fill"></i>
+                                </span>
+                                <input asp-for="ConfirmPassword" class="form-control" type="password" />
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('ConfirmPassword', this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                        
+                        <!-- Personal Information Section -->
+                        <div class="col-12 mt-4">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="bi bi-person-vcard me-2"></i>
+                                Información Personal
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="FirstName" class="form-label">
+                                <span class="text-danger">*</span> @Html.DisplayNameFor(m => m.FirstName)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-person"></i>
+                                </span>
+                                <input asp-for="FirstName" class="form-control" placeholder="Juan" />
+                            </div>
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="LastName" class="form-label">
+                                <span class="text-danger">*</span> @Html.DisplayNameFor(m => m.LastName)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-person"></i>
+                                </span>
+                                <input asp-for="LastName" class="form-control" placeholder="Pérez" />
+                            </div>
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <label asp-for="RoleId" class="form-label">
+                                <span class="text-danger">*</span> @Html.DisplayNameFor(m => m.RoleId)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-shield-lock"></i>
+                                </span>
+                                <select asp-for="RoleId" asp-items="Model.Roles" class="form-select">
+                                    <option value="">-- Seleccionar Rol --</option>
+                                </select>
+                            </div>
+                            <span asp-validation-for="RoleId" class="text-danger small"></span>
+                        </div>
+                        
+                        <!-- Account Settings Section -->
+                        <div class="col-12 mt-4">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="bi bi-gear me-2"></i>
+                                Configuración de la Cuenta
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" checked />
+                                <label asp-for="IsActive" class="form-check-label">
+                                    @Html.DisplayNameFor(m => m.IsActive)
+                                </label>
+                            </div>
+                            <div class="form-text">El usuario podrá iniciar sesión inmediatamente</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsEmailVerified" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsEmailVerified" class="form-check-label">
+                                    @Html.DisplayNameFor(m => m.IsEmailVerified)
+                                </label>
+                            </div>
+                            <div class="form-text">Marcar como verificado sin enviar email</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input asp-for="MustChangePassword" class="form-check-input" type="checkbox" />
+                                <label asp-for="MustChangePassword" class="form-check-label">
+                                    @Html.DisplayNameFor(m => m.MustChangePassword)
+                                </label>
+                            </div>
+                            <div class="form-text">Forzar cambio en el próximo inicio</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input asp-for="SendWelcomeEmail" class="form-check-input" type="checkbox" checked />
+                                <label asp-for="SendWelcomeEmail" class="form-check-label">
+                                    @Html.DisplayNameFor(m => m.SendWelcomeEmail)
+                                </label>
+                            </div>
+                            <div class="form-text">Enviar credenciales por email</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Validation Summary -->
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger mt-3 d-none" role="alert"></div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="createUserBtn">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Crear Usuario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePasswordVisibility(fieldId, button) {
+        var field = document.getElementById(fieldId);
+        var icon = button.querySelector('i');
+        
+        if (field.type === "password") {
+            field.type = "text";
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            field.type = "password";
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    }
+</script>
+
+<style>
+    /* Ensure modal footer is always visible */
+    .modal-dialog-scrollable .modal-content {
+        max-height: 90vh;
+    }
+    
+    .modal-dialog-scrollable .modal-body {
+        max-height: calc(90vh - 200px);
+        overflow-y: auto;
+    }
+    
+    .modal-footer {
+        border-top: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        flex-shrink: 0;
+    }
+</style>

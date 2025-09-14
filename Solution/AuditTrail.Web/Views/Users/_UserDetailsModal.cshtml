@@ -1,0 +1,336 @@
+@model AuditTrail.Core.Entities.Auth.User
+
+<div class="modal fade" id="userDetailsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="userDetailsModalLabel">
+                    <i class="bi bi-person-lines-fill me-2"></i>
+                    Detalles de Usuario
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="row g-4">
+                    <!-- User Avatar and Basic Info -->
+                    <div class="col-12">
+                        <div class="text-center mb-4">
+                            <div class="avatar-xl mb-3 mx-auto">
+                                <div class="avatar-initials rounded-circle bg-info text-white">
+                                    @Model.FirstName.FirstOrDefault()@Model.LastName.FirstOrDefault()
+                                </div>
+                            </div>
+                            <h4 class="mb-1">@Model.FirstName @Model.LastName</h4>
+                            <p class="text-muted mb-2">@@@Model.Username</p>
+                            <div class="d-flex justify-content-center gap-2">
+                                @if (Model.IsActive)
+                                {
+                                    <span class="badge bg-success-subtle text-success">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        Usuario Activo
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger-subtle text-danger">
+                                        <i class="bi bi-x-circle me-1"></i>
+                                        Usuario Inactivo
+                                    </span>
+                                }
+                                
+                                @if (Model.IsLocked)
+                                {
+                                    <span class="badge bg-warning-subtle text-warning">
+                                        <i class="bi bi-lock me-1"></i>
+                                        Cuenta Bloqueada
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Account Information -->
+                    <div class="col-12">
+                        <h6 class="border-bottom pb-2 mb-3 text-info">
+                            <i class="bi bi-person-circle me-2"></i>
+                            Información de la Cuenta
+                        </h6>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label class="form-label text-muted small">Nombre de Usuario</label>
+                            <div class="fw-medium">
+                                <i class="bi bi-at me-2 text-muted"></i>
+                                @Model.Username
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label class="form-label text-muted small">Correo Electrónico</label>
+                            <div class="fw-medium">
+                                <i class="bi bi-envelope me-2 text-muted"></i>
+                                <a href="mailto:@Model.Email" class="text-decoration-none">@Model.Email</a>
+                                @if (Model.IsEmailVerified)
+                                {
+                                    <i class="bi bi-check-circle-fill text-success ms-2" data-bs-toggle="tooltip" title="Email verificado"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-exclamation-circle text-warning ms-2" data-bs-toggle="tooltip" title="Email no verificado"></i>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label class="form-label text-muted small">Nombre</label>
+                            <div class="fw-medium">
+                                <i class="bi bi-person me-2 text-muted"></i>
+                                @Model.FirstName
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label class="form-label text-muted small">Apellido</label>
+                            <div class="fw-medium">
+                                <i class="bi bi-person me-2 text-muted"></i>
+                                @Model.LastName
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-12">
+                        <div class="info-item">
+                            <label class="form-label text-muted small">Rol del Sistema</label>
+                            <div class="fw-medium">
+                                <span class="badge bg-info-subtle text-info">
+                                    <i class="bi bi-shield-lock me-1"></i>
+                                    @(Model.Role?.RoleName ?? "Sin Rol Asignado")
+                                </span>
+                                @if (!string.IsNullOrEmpty(Model.Role?.Description))
+                                {
+                                    <div class="text-muted small mt-1">@Model.Role.Description</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Security & Access Information -->
+                    <div class="col-12 mt-4">
+                        <h6 class="border-bottom pb-2 mb-3 text-info">
+                            <i class="bi bi-shield-check me-2"></i>
+                            Seguridad y Acceso
+                        </h6>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label class="form-label text-muted small">Último Acceso</label>
+                            <div class="fw-medium">
+                                @if (Model.LastLoginDate.HasValue)
+                                {
+                                    <span>
+                                        <i class="bi bi-clock me-2 text-muted"></i>
+                                        @Model.LastLoginDate.Value.ToString("dd/MM/yyyy HH:mm:ss")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        <i class="bi bi-dash-circle me-2"></i>
+                                        Nunca ha iniciado sesión
+                                    </span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.LastLoginIP))
+                            {
+                                <div class="text-muted small mt-1">
+                                    <i class="bi bi-geo-alt me-1"></i>
+                                    Desde la IP: @Model.LastLoginIP
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label class="form-label text-muted small">Cambio de Contraseña</label>
+                            <div class="fw-medium">
+                                @if (Model.LastPasswordChangeDate.HasValue)
+                                {
+                                    <span>
+                                        <i class="bi bi-key me-2 text-muted"></i>
+                                        @Model.LastPasswordChangeDate.Value.ToString("dd/MM/yyyy HH:mm:ss")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        <i class="bi bi-dash-circle me-2"></i>
+                                        Nunca ha cambiado la contraseña
+                                    </span>
+                                }
+                            </div>
+                            @if (Model.MustChangePassword)
+                            {
+                                <div class="text-warning small mt-1">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Debe cambiar contraseña en el próximo acceso
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    
+                    @if (Model.FailedLoginAttempts > 0)
+                    {
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="form-label text-muted small">Intentos de Acceso Fallidos</label>
+                                <div class="fw-medium">
+                                    <span class="badge bg-warning-subtle text-warning">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        @Model.FailedLoginAttempts intentos
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    
+                    @if (Model.IsLocked && Model.LockoutEnd.HasValue)
+                    {
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="form-label text-muted small">Bloqueado Hasta</label>
+                                <div class="fw-medium text-danger">
+                                    <i class="bi bi-lock me-2"></i>
+                                    @Model.LockoutEnd.Value.ToString("dd/MM/yyyy HH:mm:ss")
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    
+                    <!-- Audit Information -->
+                    <div class="col-12 mt-4">
+                        <h6 class="border-bottom pb-2 mb-3 text-info">
+                            <i class="bi bi-clock-history me-2"></i>
+                            Información de Auditoría
+                        </h6>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label class="form-label text-muted small">Fecha de Creación</label>
+                            <div class="fw-medium">
+                                <i class="bi bi-calendar-plus me-2 text-muted"></i>
+                                @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss")
+                            </div>
+                            @if (Model.CreatedBy.HasValue)
+                            {
+                                <div class="text-muted small mt-1">
+                                    <i class="bi bi-person me-1"></i>
+                                    Creado por: @Model.CreatedBy.Value
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    
+                    @if (Model.ModifiedDate.HasValue)
+                    {
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="form-label text-muted small">Última Modificación</label>
+                                <div class="fw-medium">
+                                    <i class="bi bi-calendar-check me-2 text-muted"></i>
+                                    @Model.ModifiedDate.Value.ToString("dd/MM/yyyy HH:mm:ss")
+                                </div>
+                                @if (Model.ModifiedBy.HasValue)
+                                {
+                                    <div class="text-muted small mt-1">
+                                        <i class="bi bi-person me-1"></i>
+                                        Modificado por: @Model.ModifiedBy.Value
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    
+                    <!-- Quick Actions -->
+                    <div class="col-12 mt-4">
+                        <h6 class="border-bottom pb-2 mb-3 text-info">
+                            <i class="bi bi-lightning me-2"></i>
+                            Acciones Rápidas
+                        </h6>
+                    </div>
+                    
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="openEditUserModal('@Model.Id')">
+                                <i class="bi bi-pencil me-1"></i>
+                                Editar Usuario
+                            </button>
+                            
+                            <button type="button" 
+                                    class="btn btn-outline-@(Model.IsActive ? "warning" : "success") btn-sm"
+                                    onclick="toggleStatus('@Model.Id')">
+                                <i class="bi bi-toggle-@(Model.IsActive ? "on" : "off") me-1"></i>
+                                @(Model.IsActive ? "Desactivar" : "Activar")
+                            </button>
+                            
+                            @if (Model.IsLocked)
+                            {
+                                <button type="button" 
+                                        class="btn btn-outline-info btn-sm"
+                                        onclick="unlockAccount('@Model.Id')">
+                                    <i class="bi bi-unlock me-1"></i>
+                                    Desbloquear Cuenta
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-xl {
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 600;
+    }
+    
+    .info-item {
+        margin-bottom: 1rem;
+    }
+    
+    .info-item label {
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .info-item .fw-medium {
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+</style>
