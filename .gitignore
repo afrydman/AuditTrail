@@ -390,3 +390,19 @@ AuditTrailFiles/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Document files for testing (exclude Documentation AI folder)
+*.pdf
+!Documentation AI/*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+
+# Test file storage folder
+TestFiles/
+
+# Windows nul file
+nul

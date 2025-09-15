@@ -281,6 +281,16 @@
     </div>
 </div>
 
+<!-- Context Menu -->
+<div id="contextMenu" class="context-menu" style="display: none;">
+    <ul class="context-menu-list">
+        <li class="context-menu-item" id="renameMenuItem">
+            <i class="bi bi-pencil-square me-2"></i>
+            Renombrar
+        </li>
+    </ul>
+</div>
+
 <!-- Modal Container -->
 <div id="modalContainer"></div>
 
@@ -302,7 +312,9 @@
             getFolderPermissions: '@Url.Action("GetFolderPermissions", "Documents")',
             updateFolderPermissions: '@Url.Action("UpdateFolderPermissions", "Documents")',
             fileAuditTrail: '@Url.Action("FileAuditTrail", "Documents")',
-            getFileAuditData: '@Url.Action("GetFileAuditData", "Documents")'
+            getFileAuditData: '@Url.Action("GetFileAuditData", "Documents")',
+            renameFolder: '@Url.Action("RenameFolder", "Documents")',
+            renameFile: '@Url.Action("RenameFile", "Documents")'
         };
     </script>
 }

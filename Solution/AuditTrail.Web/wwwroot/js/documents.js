@@ -81,7 +81,9 @@ function renderTree(nodes, parentElement = '#documentTree') {
         // Simplified rendering - no complex metadata for now
         html += `
             <li class="tree-node" data-node-id="${node.id}">
-                <div class="tree-node-content" onclick="toggleNode('${node.id}')">
+                <div class="tree-node-content" 
+                     onclick="toggleNode('${node.id}')" 
+                     oncontextmenu="showContextMenu(event, '${node.id}', ${node.isCategory})">
                     ${hasChildren ? `<i class="expand-icon bi ${expandIcon}"></i>` : '<span class="expand-spacer"></span>'}
                     <i class="node-icon bi ${nodeIcon} ${node.isCategory ? 'text-warning' : 'text-primary'}"></i>
                     <span class="node-title">${node.title}</span>
@@ -1188,4 +1190,178 @@ function getActionUrl(action, controller) {
         }
     }
     return `/${controller}/${action}`;
+}
+
+// ============================================
+// CONTEXT MENU AND RENAME FUNCTIONALITY
+// ============================================
+
+let contextMenuTarget = null;
+
+// Initialize context menu when document is ready
+$(document).ready(function() {
+    initializeContextMenu();
+});
+
+function initializeContextMenu() {
+    // Hide context menu when clicking elsewhere
+    $(document).click(function() {
+        $('#contextMenu').hide();
+    });
+
+    // Context menu click handler
+    $('#renameMenuItem').click(function(e) {
+        e.preventDefault();
+        if (contextMenuTarget) {
+            showRenameDialog(contextMenuTarget);
+        }
+        $('#contextMenu').hide();
+    });
+
+    // Prevent context menu on context menu itself
+    $('#contextMenu').contextmenu(function(e) {
+        e.preventDefault();
+    });
+}
+
+// Show context menu for tree nodes
+function showContextMenu(e, nodeId, isCategory) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    contextMenuTarget = {
+        nodeId: nodeId,
+        isCategory: isCategory,
+        element: $(e.target).closest('.tree-node-content')
+    };
+    
+    const contextMenu = $('#contextMenu');
+    contextMenu.css({
+        left: e.pageX + 'px',
+        top: e.pageY + 'px'
+    }).show();
+}
+
+// Show rename dialog
+function showRenameDialog(target) {
+    const nodeElement = target.element;
+    const currentName = nodeElement.find('.node-title').text().trim();
+    const entityType = target.isCategory ? 'carpeta' : 'archivo';
+    
+    // Create modal HTML
+    const modalHtml = `
+        <div class="modal fade" id="renameModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Renombrar ${entityType}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="renameForm">
+                            <div class="mb-3">
+                                <label for="newName" class="form-label">Nuevo nombre:</label>
+                                <input type="text" class="form-control" id="newName" value="${currentName}" required>
+                                <div class="form-text">
+                                    Ingresa el nuevo nombre para ${entityType === 'carpeta' ? 'la carpeta' : 'el archivo'}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="performRename()">
+                            <i class="bi bi-check-lg me-1"></i>
+                            Renombrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Show modal
+    $('#modalContainer').html(modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('renameModal'));
+    modal.show();
+    
+    // Focus and select the input text
+    setTimeout(() => {
+        const input = document.getElementById('newName');
+        input.focus();
+        input.select();
+    }, 100);
+    
+    // Handle Enter key
+    $('#newName').keypress(function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            performRename();
+        }
+    });
+}
+
+// Perform the rename operation
+function performRename() {
+    const newName = $('#newName').val().trim();
+    
+    if (!newName) {
+        showToast('error', 'El nombre no puede estar vacío');
+        return;
+    }
+    
+    if (!contextMenuTarget) {
+        showToast('error', 'Error: no se encontró el elemento a renombrar');
+        return;
+    }
+    
+    const isCategory = contextMenuTarget.isCategory;
+    const nodeId = contextMenuTarget.nodeId;
+    const url = isCategory ? getActionUrl('RenameFolder', 'Documents') : getActionUrl('RenameFile', 'Documents');
+    
+    const requestData = isCategory 
+        ? { categoryId: nodeId, newName: newName }
+        : { fileId: nodeId, newName: newName };
+    
+    // Show loading state
+    const renameBtn = $('#renameModal .btn-primary');
+    const originalText = renameBtn.html();
+    renameBtn.html('<i class="spinner-border spinner-border-sm me-1"></i>Renombrando...').prop('disabled', true);
+    
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: requestData,
+        headers: {
+            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+        },
+        success: function(response) {
+            if (response.success) {
+                showToast('success', `${isCategory ? 'Carpeta' : 'Archivo'} renombrado exitosamente`);
+                
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('renameModal')).hide();
+                
+                // Refresh tree data and folder contents
+                loadTreeData();
+                if (currentFolderId) {
+                    loadFolderContents(currentFolderId, currentFolderName);
+                }
+                
+                // Clear context menu target
+                contextMenuTarget = null;
+            } else {
+                showToast('error', response.message || 'Error al renombrar');
+                renameBtn.html(originalText).prop('disabled', false);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Rename error:', error);
+            showToast('error', 'Error al renombrar. Por favor, inténtalo de nuevo.');
+            renameBtn.html(originalText).prop('disabled', false);
+        }
+    });
 }

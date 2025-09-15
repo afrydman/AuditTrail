@@ -1218,5 +1218,124 @@ namespace AuditTrail.Web.Controllers
                 return "Usuario desconocido";
             }
         }
+
+        /// <summary>
+        /// Rename a folder (FileCategory)
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RenameFolder(int categoryId, string newName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(newName))
+                {
+                    return Json(new { success = false, message = "El nombre no puede estar vacío" });
+                }
+
+                // Get the folder to rename
+                var category = await _fileCategoryRepository.GetByIdAsync(categoryId);
+                if (category == null)
+                {
+                    return Json(new { success = false, message = "Carpeta no encontrada" });
+                }
+
+                // Store old name for audit
+                var oldName = category.CategoryName;
+
+                // Check if the new name already exists in the same parent
+                var existingCategory = await _dbContext.FileCategories
+                    .Where(fc => fc.ParentCategoryId == category.ParentCategoryId && 
+                                 fc.CategoryName == newName && 
+                                 fc.Id != categoryId &&
+                                 fc.IsActive)
+                    .FirstOrDefaultAsync();
+
+                if (existingCategory != null)
+                {
+                    return Json(new { success = false, message = "Ya existe una carpeta con ese nombre en la misma ubicación" });
+                }
+
+                // Update the category name
+                category.CategoryName = newName;
+                category.ModifiedDate = DateTime.UtcNow;
+                category.ModifiedBy = _currentUserService.UserId;
+
+                await _fileCategoryRepository.UpdateAsync(category);
+
+                _logger.LogInformation("Folder renamed from '{OldName}' to '{NewName}' by user {UserId}", 
+                    oldName, newName, _currentUserService.UserId);
+
+                return Json(new { success = true, message = "Carpeta renombrada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error renaming folder {CategoryId} to '{NewName}'", categoryId, newName);
+                return Json(new { success = false, message = "Error interno al renombrar la carpeta" });
+            }
+        }
+
+        /// <summary>
+        /// Rename a file (FileEntity)
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RenameFile(Guid fileId, string newName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(newName))
+                {
+                    return Json(new { success = false, message = "El nombre no puede estar vacío" });
+                }
+
+                // Get the file to rename
+                var file = await _fileRepository.GetByIdAsync(fileId);
+                if (file == null)
+                {
+                    return Json(new { success = false, message = "Archivo no encontrado" });
+                }
+
+                // Store old name for audit
+                var oldName = file.FileName;
+
+                // Validate file extension
+                var fileExtension = Path.GetExtension(oldName);
+                if (!newName.EndsWith(fileExtension, StringComparison.OrdinalIgnoreCase))
+                {
+                    newName += fileExtension;
+                }
+
+                // Check if the new name already exists in the same category
+                var existingFile = await _dbContext.Files
+                    .Where(f => f.CategoryId == file.CategoryId && 
+                                f.FileName == newName && 
+                                f.Id != fileId &&
+                                !f.IsDeleted)
+                    .FirstOrDefaultAsync();
+
+                if (existingFile != null)
+                {
+                    return Json(new { success = false, message = "Ya existe un archivo con ese nombre en la misma carpeta" });
+                }
+
+                // Update the file name
+                file.FileName = newName;
+                file.ModifiedDate = DateTime.UtcNow;
+                file.ModifiedBy = _currentUserService.UserId;
+
+                await _fileRepository.UpdateAsync(file);
+
+                _logger.LogInformation("File renamed from '{OldName}' to '{NewName}' by user {UserId}", 
+                    oldName, newName, _currentUserService.UserId);
+
+                return Json(new { success = true, message = "Archivo renombrado exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error renaming file {FileId} to '{NewName}'", fileId, newName);
+                return Json(new { success = false, message = "Error interno al renombrar el archivo" });
+            }
+        }
     }
 }
