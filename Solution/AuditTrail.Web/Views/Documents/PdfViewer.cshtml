@@ -47,7 +47,7 @@
             <!-- PDF.js Viewer -->
             <div id="pdfViewerContainer" style="position: relative;">
                 <iframe id="pdfViewer" 
-                        src="/lib/pdfjs/web/viewer.html?file=@Url.Action("GetPdfFile", "Documents", new { id = Model.FileId })" 
+                        src="/lib/pdfjs/web/viewer.html?file=@Url.Action("GetPdfFile", "Documents", new { id = Model.FileId, t = DateTime.UtcNow.Ticks })" 
                         frameborder="0"
                         style="width: 100%; height: 100%; border: none; display: block;">
                 </iframe>
@@ -210,6 +210,11 @@
                 '@Url.Action("DownloadFile", "Documents", new { id = Model.FileId, fromViewer = true })'
             );
             
+            // Set up download button for current file version
+            $('#btnDownloadPdf').on('click', function() {
+                downloadFile('@Model.FileId');
+            });
+            
             // Load file versions
             loadFileVersions('@Model.FileId');
             
@@ -267,8 +272,92 @@
         }
         
         function switchVersion(fileId) {
-            // Redirect to the same viewer but with different file version
-            window.location.href = '@Url.Action("ViewPdf", "Documents")?id=' + fileId;
+            // Instead of redirecting, update the iframe source directly for smoother experience
+            // and add cache busting to ensure fresh content
+            const timestamp = new Date().getTime();
+            const newSrc = '/lib/pdfjs/web/viewer.html?file=' + encodeURIComponent('@Url.Action("GetPdfFile", "Documents")?id=' + fileId + '&t=' + timestamp);
+            
+            // Show loading indicator
+            $('#pdfViewerContainer').append('<div id="versionLoadingOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cambiando versión...</span></div><div class="ms-3">Cargando versión...</div></div>');
+            
+            // Update iframe source
+            const iframe = document.getElementById('pdfViewer');
+            iframe.src = newSrc;
+            
+            // Remove loading overlay after iframe loads
+            iframe.onload = function() {
+                setTimeout(function() {
+                    $('#versionLoadingOverlay').fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                }, 500); // Give it a moment to fully render
+            };
+            
+            // Update the version dropdown button text
+            $.get('@Url.Action("GetFileVersions", "Documents")', { fileId: fileId })
+                .done(function(versions) {
+                    const selectedVersion = versions.find(v => v.id === fileId);
+                    if (selectedVersion) {
+                        $('#versionDropdown').html(`<i class="bi bi-clock-history me-1"></i>Versión (${selectedVersion.version})`);
+                        
+                        // Update the active state in dropdown
+                        renderVersionDropdown(versions, fileId);
+                    }
+                });
+                
+            // Update download button to use new file ID
+            $('#btnDownloadPdf').off('click').on('click', function() {
+                downloadFile(fileId);
+            });
+            
+            // Update sidebar information for the new version
+            updateSidebarForVersion(fileId);
+        }
+        
+        function updateSidebarForVersion(fileId) {
+            // Get detailed information for the selected version
+            $.get('@Url.Action("GetFileDetail", "Documents")', { id: fileId })
+                .done(function(response) {
+                    if (response.success) {
+                        const file = response.file;
+                        // Update sidebar elements with new version info
+                        $('.pdf-viewer-sidebar h6:contains("@Model.FileName")').text(file.name);
+                        $('.pdf-viewer-sidebar .badge').text(file.type);
+                        
+                        // Update info table
+                        const infoTable = $('.info-table tbody');
+                        infoTable.find('tr').each(function() {
+                            const label = $(this).find('td:first').text().trim();
+                            const valueCell = $(this).find('td:last');
+                            
+                            switch(label) {
+                                case 'Tamaño:':
+                                    valueCell.html('<strong>' + file.size + '</strong>');
+                                    break;
+                                case 'Versión:':
+                                    let versionHtml = '<strong>v ' + file.version + '</strong>';
+                                    if (file.version > 1) {
+                                        versionHtml += '<span class="badge bg-info ms-1">Versionado</span>';
+                                    }
+                                    valueCell.html(versionHtml);
+                                    break;
+                                case 'Subido por:':
+                                    valueCell.html('<strong>' + file.uploadedBy + '</strong>');
+                                    break;
+                                case 'Fecha de Carga:':
+                                    valueCell.html('<strong>' + file.uploadedDate + '</strong>');
+                                    break;
+                            }
+                        });
+                        
+                        // Update action buttons in sidebar
+                        $('.btn[onclick*="showFullAuditTrail"]').attr('onclick', `showFullAuditTrail('${fileId}', '${file.name.replace("'", "\\'")}' )`);
+                        $('.btn[onclick*="downloadFile"]').attr('onclick', `downloadFile('${fileId}')`);
+                    }
+                })
+                .fail(function() {
+                    console.warn('Could not load detailed version information for sidebar update');
+                });
         }
         
         function toggleSidebar() {

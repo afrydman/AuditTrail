@@ -1322,9 +1322,14 @@ function performRename() {
     const nodeId = contextMenuTarget.nodeId;
     const url = isCategory ? getActionUrl('RenameFolder', 'Documents') : getActionUrl('RenameFile', 'Documents');
     
+    // Parse the actual ID from the prefixed node ID
+    const actualId = isCategory 
+        ? parseInt(nodeId.replace('cat_', ''))  // Remove 'cat_' prefix for categories
+        : nodeId.replace('file_', '');          // Remove 'file_' prefix for files (keep as string for GUID)
+    
     const requestData = isCategory 
-        ? { categoryId: nodeId, newName: newName }
-        : { fileId: nodeId, newName: newName };
+        ? { categoryId: actualId, newName: newName }
+        : { fileId: actualId, newName: newName };
     
     // Show loading state
     const renameBtn = $('#renameModal .btn-primary');

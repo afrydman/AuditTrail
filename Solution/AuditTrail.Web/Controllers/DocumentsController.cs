@@ -7,6 +7,7 @@ using AuditTrail.Core.Enums;
 using AuditTrail.Infrastructure.Interceptors;
 using AuditTrail.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace AuditTrail.Web.Controllers
 {
@@ -116,8 +117,8 @@ namespace AuditTrail.Web.Controllers
         {
             var rootNodes = new List<TreeNodeViewModel>();
 
-            // Get root categories (no parent)
-            var rootCategories = categories.Where(c => c.ParentCategoryId == null).OrderBy(c => c.CategoryName);
+            // Get root categories (no parent) - using natural sort for proper numeric ordering
+            var rootCategories = categories.Where(c => c.ParentCategoryId == null).OrderBy(c => c.CategoryName, new NaturalStringComparer());
 
             foreach (var category in rootCategories)
             {
@@ -139,7 +140,7 @@ namespace AuditTrail.Web.Controllers
 
             // Add files that don't belong to any category (should be rare)
             var orphanFiles = files.Where(f => !categories.Any(c => c.Id == f.CategoryId));
-            foreach (var file in orphanFiles.OrderBy(f => f.FileName))
+            foreach (var file in orphanFiles.OrderBy(f => f.FileName, new NaturalStringComparer()))
             {
                 rootNodes.Add(new TreeNodeViewModel
                 {
@@ -167,10 +168,10 @@ namespace AuditTrail.Web.Controllers
         {
             parentNode.Children = new List<TreeNodeViewModel>();
 
-            // Add child categories
+            // Add child categories - using natural sort for proper numeric ordering
             var childCategories = allCategories
                 .Where(c => c.ParentCategoryId == parentCategoryId)
-                .OrderBy(c => c.CategoryName);
+                .OrderBy(c => c.CategoryName, new NaturalStringComparer());
 
             foreach (var childCategory in childCategories)
             {
@@ -189,10 +190,10 @@ namespace AuditTrail.Web.Controllers
                 parentNode.Children.Add(childNode);
             }
 
-            // Add files in this category
+            // Add files in this category - using natural sort for proper numeric ordering
             var categoryFiles = allFiles
                 .Where(f => f.CategoryId == parentCategoryId)
-                .OrderBy(f => f.FileName);
+                .OrderBy(f => f.FileName, new NaturalStringComparer());
 
             foreach (var file in categoryFiles)
             {
@@ -562,7 +563,7 @@ namespace AuditTrail.Web.Controllers
                 var categories = await GetFileCategoriesAsync();
                 var subfolders = categories
                     .Where(c => c.ParentCategoryId == categoryId)
-                    .OrderBy(c => c.CategoryName)
+                    .OrderBy(c => c.CategoryName, new NaturalStringComparer())
                     .Select(c => new {
                         id = $"cat_{c.Id}",
                         name = c.CategoryName,
@@ -580,7 +581,7 @@ namespace AuditTrail.Web.Controllers
                 var files = await _fileRepository.GetAllAsync();
                 var categoryFiles = files
                     .Where(f => f.CategoryId == categoryId && !f.IsDeleted && f.IsCurrentVersion)
-                    .OrderBy(f => f.FileName)
+                    .OrderBy(f => f.FileName, new NaturalStringComparer())
                     .Select(f => new {
                         id = f.Id,
                         name = f.FileName,
@@ -1156,6 +1157,46 @@ namespace AuditTrail.Web.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> GetFileDetail(Guid id)
+        {
+            try
+            {
+                var file = await _fileRepository.GetByIdAsync(id);
+                if (file == null)
+                {
+                    return Json(new { success = false, message = "Archivo no encontrado" });
+                }
+
+                // Get uploader name
+                string uploaderName = "Sistema";
+                if (file.UploadedBy != Guid.Empty)
+                {
+                    uploaderName = GetUserFullName(file.UploadedBy);
+                }
+
+                var fileDetail = new
+                {
+                    id = file.Id,
+                    name = file.FileName,
+                    size = FormatFileSize(file.FileSize),
+                    type = GetFileTypeName(file.FileExtension),
+                    extension = file.FileExtension,
+                    version = file.Version,
+                    uploadedBy = uploaderName,
+                    uploadedDate = file.UploadedDate.ToString("dd/MM/yyyy HH:mm"),
+                    contentType = file.ContentType ?? "application/octet-stream"
+                };
+
+                return Json(new { success = true, file = fileDetail });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting file detail for {FileId}", id);
+                return Json(new { success = false, message = "Error al obtener detalles del archivo" });
+            }
+        }
+
+        [HttpGet]
         public async Task<IActionResult> GetFileVersions(Guid fileId)
         {
             try
@@ -1234,7 +1275,8 @@ namespace AuditTrail.Web.Controllers
                 }
 
                 // Get the folder to rename
-                var category = await _fileCategoryRepository.GetByIdAsync(categoryId);
+                var category = await _dbContext.FileCategories
+                    .FirstOrDefaultAsync(fc => fc.Id == categoryId && fc.IsActive);
                 if (category == null)
                 {
                     return Json(new { success = false, message = "Carpeta no encontrada" });
@@ -1261,7 +1303,7 @@ namespace AuditTrail.Web.Controllers
                 category.ModifiedDate = DateTime.UtcNow;
                 category.ModifiedBy = _currentUserService.UserId;
 
-                await _fileCategoryRepository.UpdateAsync(category);
+                await _dbContext.SaveChangesAsync();
 
                 _logger.LogInformation("Folder renamed from '{OldName}' to '{NewName}' by user {UserId}", 
                     oldName, newName, _currentUserService.UserId);
@@ -1290,7 +1332,8 @@ namespace AuditTrail.Web.Controllers
                 }
 
                 // Get the file to rename
-                var file = await _fileRepository.GetByIdAsync(fileId);
+                var file = await _dbContext.Files
+                    .FirstOrDefaultAsync(f => f.Id == fileId && !f.IsDeleted);
                 if (file == null)
                 {
                     return Json(new { success = false, message = "Archivo no encontrado" });
@@ -1324,7 +1367,7 @@ namespace AuditTrail.Web.Controllers
                 file.ModifiedDate = DateTime.UtcNow;
                 file.ModifiedBy = _currentUserService.UserId;
 
-                await _fileRepository.UpdateAsync(file);
+                await _dbContext.SaveChangesAsync();
 
                 _logger.LogInformation("File renamed from '{OldName}' to '{NewName}' by user {UserId}", 
                     oldName, newName, _currentUserService.UserId);
@@ -1336,6 +1379,76 @@ namespace AuditTrail.Web.Controllers
                 _logger.LogError(ex, "Error renaming file {FileId} to '{NewName}'", fileId, newName);
                 return Json(new { success = false, message = "Error interno al renombrar el archivo" });
             }
+        }
+    }
+
+    /// <summary>
+    /// Natural string comparer that properly handles numeric sorting in strings
+    /// Example: "2. Folder" comes before "10. Folder"
+    /// </summary>
+    public class NaturalStringComparer : IComparer<string>
+    {
+        private static readonly Regex _numberRegex = new Regex(@"\d+", RegexOptions.Compiled);
+
+        public int Compare(string? x, string? y)
+        {
+            if (x == null && y == null) return 0;
+            if (x == null) return -1;
+            if (y == null) return 1;
+
+            var xMatches = _numberRegex.Matches(x);
+            var yMatches = _numberRegex.Matches(y);
+
+            int xIndex = 0, yIndex = 0;
+            int xMatchIndex = 0, yMatchIndex = 0;
+
+            while (xIndex < x.Length || yIndex < y.Length)
+            {
+                bool xIsNumber = xMatchIndex < xMatches.Count && xIndex == xMatches[xMatchIndex].Index;
+                bool yIsNumber = yMatchIndex < yMatches.Count && yIndex == yMatches[yMatchIndex].Index;
+
+                if (xIsNumber && yIsNumber)
+                {
+                    // Both are numbers - compare numerically
+                    var xMatch = xMatches[xMatchIndex];
+                    var yMatch = yMatches[yMatchIndex];
+                    
+                    if (int.TryParse(xMatch.Value, out int xNum) && int.TryParse(yMatch.Value, out int yNum))
+                    {
+                        int numComparison = xNum.CompareTo(yNum);
+                        if (numComparison != 0) return numComparison;
+                    }
+
+                    xIndex = xMatch.Index + xMatch.Length;
+                    yIndex = yMatch.Index + yMatch.Length;
+                    xMatchIndex++;
+                    yMatchIndex++;
+                }
+                else if (xIsNumber)
+                {
+                    // x is number, y is text - numbers come first
+                    return -1;
+                }
+                else if (yIsNumber)
+                {
+                    // y is number, x is text - numbers come first
+                    return 1;
+                }
+                else
+                {
+                    // Both are text - compare character by character
+                    if (xIndex >= x.Length) return yIndex >= y.Length ? 0 : -1;
+                    if (yIndex >= y.Length) return 1;
+
+                    int charComparison = char.ToUpperInvariant(x[xIndex]).CompareTo(char.ToUpperInvariant(y[yIndex]));
+                    if (charComparison != 0) return charComparison;
+
+                    xIndex++;
+                    yIndex++;
+                }
+            }
+
+            return x.Length.CompareTo(y.Length);
         }
     }
 }

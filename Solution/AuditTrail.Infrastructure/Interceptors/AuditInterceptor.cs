@@ -32,16 +32,20 @@ public class AuditInterceptor : SaveChangesInterceptor
         {
             foreach (var auditEntry in auditEntries)
             {
-                await _auditRepository.LogAuditEventAsync(
-                    auditEntry.EventType,
-                    auditEntry.Action,
-                    _currentUserService.UserId,
-                    _currentUserService.Username,
-                    auditEntry.EntityType,
-                    auditEntry.EntityId,
-                    auditEntry.OldValue,
-                    auditEntry.NewValue,
-                    _currentUserService.IpAddress);
+                await _auditRepository.LogAuditEventAsync(new AuditTrailEntry
+                {
+                    EventType = auditEntry.EventType,
+                    Action = auditEntry.Action,
+                    UserId = _currentUserService.UserId,
+                    Username = _currentUserService.Username,
+                    EntityType = auditEntry.EntityType,
+                    EntityId = auditEntry.EntityId,
+                    EntityName = auditEntry.EntityName,
+                    OldValue = auditEntry.OldValue,
+                    NewValue = auditEntry.NewValue,
+                    IPAddress = _currentUserService.IpAddress,
+                    Result = "Success"
+                });
             }
         }
 
@@ -77,6 +81,9 @@ public class AuditInterceptor : SaveChangesInterceptor
 
             // Determine event type based on entity and action
             auditEntry.EventType = DetermineEventType(entry.Entity.GetType().Name, entry.State);
+            
+            // Set entity name based on entity type
+            auditEntry.EntityName = DetermineEntityName(entry.Entity, entry.State);
 
             // Capture old and new values for modified entities
             if (entry.State == EntityState.Modified)
@@ -157,11 +164,37 @@ public class AuditInterceptor : SaveChangesInterceptor
         return $"{entityName}{action}";
     }
 
+    private string? DetermineEntityName(object entity, EntityState state)
+    {
+        // For deleted entities, we might not have current values, so we try to get from original values
+        return entity.GetType().Name switch
+        {
+            "FileCategory" => GetPropertyValue(entity, "CategoryName", state),
+            "FileEntity" => GetPropertyValue(entity, "FileName", state),
+            "User" => GetPropertyValue(entity, "Username", state),
+            _ => null
+        };
+    }
+
+    private string? GetPropertyValue(object entity, string propertyName, EntityState state)
+    {
+        try
+        {
+            var property = entity.GetType().GetProperty(propertyName);
+            return property?.GetValue(entity)?.ToString();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private class AuditEntry
     {
         public string EventType { get; set; } = string.Empty;
         public string EntityType { get; set; } = string.Empty;
         public string EntityId { get; set; } = string.Empty;
+        public string? EntityName { get; set; }
         public string Action { get; set; } = string.Empty;
         public string? OldValue { get; set; }
         public string? NewValue { get; set; }

@@ -85,8 +85,15 @@ namespace AuditTrail.Web.Controllers
         {
             try
             {
+                // Adjust endDate to include the entire day (set to end of day)
+                DateTime? adjustedEndDate = endDate;
+                if (endDate.HasValue)
+                {
+                    adjustedEndDate = endDate.Value.Date.AddDays(1).AddTicks(-1);
+                }
+
                 // Validate date range
-                if (startDate.HasValue && endDate.HasValue && startDate > endDate)
+                if (startDate.HasValue && adjustedEndDate.HasValue && startDate > adjustedEndDate)
                 {
                     return Json(new { success = false, message = "La fecha de inicio no puede ser mayor que la fecha de fin" });
                 }
@@ -94,7 +101,7 @@ namespace AuditTrail.Web.Controllers
                 // Search audit trail using repository
                 var auditEntries = await _auditRepository.SearchAuditTrailAsync(
                     startDate, 
-                    endDate, 
+                    adjustedEndDate, 
                     userId, 
                     eventType, 
                     entityType, 

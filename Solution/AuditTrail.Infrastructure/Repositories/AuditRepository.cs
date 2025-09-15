@@ -104,10 +104,22 @@ public class AuditRepository : IAuditRepository
         parameters.Add("@PageNumber", pageNumber);
         parameters.Add("@PageSize", pageSize);
 
-        var result = await connection.QueryAsync<AuditTrailEntry>(
-            "audit.sp_SearchAuditTrail",
-            parameters,
-            commandType: CommandType.StoredProcedure);
+        // Use direct query to ensure OldValue and NewValue are included
+        var sql = @"
+            SELECT AuditId, EventType, EventCategory, Timestamp, UserId, Username, RoleName, 
+                   IPAddress, UserAgent, SessionId, EntityType, EntityId, EntityName, Action, 
+                   OldValue, NewValue, Result, ErrorMessage, Duration
+            FROM audit.AuditTrail 
+            WHERE (@StartDate IS NULL OR Timestamp >= @StartDate)
+              AND (@EndDate IS NULL OR Timestamp <= @EndDate)
+              AND (@UserId IS NULL OR UserId = @UserId)
+              AND (@EventType IS NULL OR EventType = @EventType)
+              AND (@EntityType IS NULL OR EntityType = @EntityType)
+            ORDER BY Timestamp DESC
+            OFFSET ((@PageNumber - 1) * @PageSize) ROWS 
+            FETCH NEXT @PageSize ROWS ONLY";
+
+        var result = await connection.QueryAsync<AuditTrailEntry>(sql, parameters);
 
         return result;
     }

@@ -284,15 +284,7 @@ function createAuditDetailRow(entry) {
     
     let changesHtml = '';
     if (hasChanges) {
-        changesHtml = `
-            <div class="col-12">
-                <h6>Cambios de Valor:</h6>
-                <div class="value-change">
-                    ${entry.oldValue ? `<span class="old-value">Anterior: ${entry.oldValue}</span>` : ''}
-                    ${entry.newValue ? `<span class="new-value">Nuevo: ${entry.newValue}</span>` : ''}
-                </div>
-            </div>
-        `;
+        changesHtml = formatValueChanges(entry.oldValue, entry.newValue);
     }
     
     let errorHtml = '';
@@ -488,8 +480,7 @@ function showAuditDetailModal(auditId) {
                         <tr><th>Nombre de Entidad</th><td>${entry.entityName}</td></tr>
                         <tr><th>Dirección IP</th><td>${entry.ipAddress}</td></tr>
                         <tr><th>Duración</th><td>${entry.duration}</td></tr>
-                        ${entry.oldValue ? `<tr><th>Valor Anterior</th><td><pre class="small">${entry.oldValue}</pre></td></tr>` : ''}
-                        ${entry.newValue ? `<tr><th>Valor Nuevo</th><td><pre class="small">${entry.newValue}</pre></td></tr>` : ''}
+                        ${(entry.oldValue || entry.newValue) ? `<tr><th colspan="2">Cambios de Valor</th></tr><tr><td colspan="2">${formatValueChanges(entry.oldValue, entry.newValue, false)}</td></tr>` : ''}
                         ${entry.errorMessage ? `<tr><th>Mensaje de Error</th><td class="text-danger">${entry.errorMessage}</td></tr>` : ''}
                     </tbody>
                 </table>
@@ -507,4 +498,136 @@ function showAuditDetailModal(auditId) {
     
     $('#auditDetailContent').html(modalContent);
     $('#auditDetailModal').modal('show');
+}
+
+// Format value changes in a nice table format
+function formatValueChanges(oldValue, newValue, includeWrapper = true) {
+    let oldData = null;
+    let newData = null;
+    
+    // Parse JSON values
+    try {
+        if (oldValue) {
+            oldData = JSON.parse(oldValue);
+        }
+    } catch (e) {
+        oldData = { "Valor": oldValue };
+    }
+    
+    try {
+        if (newValue) {
+            newData = JSON.parse(newValue);
+        }
+    } catch (e) {
+        newData = { "Valor": newValue };
+    }
+    
+    // Get all unique keys from both objects
+    const allKeys = new Set();
+    if (oldData) Object.keys(oldData).forEach(key => allKeys.add(key));
+    if (newData) Object.keys(newData).forEach(key => allKeys.add(key));
+    
+    // Filter out technical fields that users don't need to see
+    const filteredKeys = Array.from(allKeys).filter(key => 
+        !['Id', 'CreatedBy', 'CreatedDate', 'ModifiedBy', 'ModifiedDate'].includes(key)
+    ).sort();
+    
+    // If no relevant keys, return empty
+    if (filteredKeys.length === 0) {
+        return '';
+    }
+    
+    // Create table rows
+    let tableRows = '';
+    filteredKeys.forEach(key => {
+        const oldVal = oldData ? formatSingleValue(oldData[key]) : '-';
+        const newVal = newData ? formatSingleValue(newData[key]) : '-';
+        
+        // Only show rows where values actually changed or one exists
+        if (oldVal !== newVal || (oldVal === '-' && newVal !== '-') || (oldVal !== '-' && newVal === '-')) {
+            const fieldName = translateFieldName(key);
+            const isChanged = oldVal !== newVal;
+            const rowClass = isChanged ? 'table-warning' : '';
+            
+            tableRows += `
+                <tr class="${rowClass}">
+                    <td class="fw-bold">${fieldName}</td>
+                    <td class="text-muted">${oldVal}</td>
+                    <td class="text-primary">${newVal}</td>
+                </tr>
+            `;
+        }
+    });
+    
+    if (!tableRows) {
+        return '';
+    }
+    
+    const tableHtml = `
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 30%;">Campo</th>
+                        <th style="width: 35%;">Valor Anterior</th>
+                        <th style="width: 35%;">Valor Nuevo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    if (includeWrapper) {
+        return `
+            <div class="col-12">
+                <h6>Cambios de Valor:</h6>
+                ${tableHtml}
+            </div>
+        `;
+    }
+    
+    return tableHtml;
+}
+
+// Format a single value for display
+function formatSingleValue(value) {
+    if (value === null || value === undefined) {
+        return '-';
+    }
+    if (typeof value === 'boolean') {
+        return value ? 'Sí' : 'No';
+    }
+    if (typeof value === 'string' && value.trim() === '') {
+        return '(vacío)';
+    }
+    return value.toString();
+}
+
+// Translate technical field names to user-friendly Spanish names
+function translateFieldName(fieldName) {
+    const translations = {
+        'CategoryName': 'Nombre de Carpeta',
+        'CategoryPath': 'Ruta de Carpeta', 
+        'FileName': 'Nombre de Archivo',
+        'Description': 'Descripción',
+        'IsActive': 'Activo',
+        'InheritParentPermissions': 'Heredar Permisos',
+        'RequireExplicitAccess': 'Requiere Acceso Explícito',
+        'IsSystemFolder': 'Carpeta del Sistema',
+        'ParentCategoryId': 'Carpeta Padre',
+        'FileSize': 'Tamaño de Archivo',
+        'FileExtension': 'Extensión',
+        'IsDeleted': 'Eliminado',
+        'Version': 'Versión',
+        'Username': 'Nombre de Usuario',
+        'FirstName': 'Nombre',
+        'LastName': 'Apellido',
+        'Email': 'Correo Electrónico',
+        'IsLockedOut': 'Bloqueado'
+    };
+    
+    return translations[fieldName] || fieldName;
 }
