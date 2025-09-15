@@ -32,7 +32,13 @@ public class FileEntity : BaseEntityWithId
     public Guid? ArchivedBy { get; set; }
     public string? ArchiveStorageTier { get; set; }
     
+    // Versioning properties
+    public bool IsCurrentVersion { get; set; } = true;
+    public Guid? ParentFileId { get; set; }
+    
     // Navigation properties
     public virtual FileCategory? Category { get; set; }
     public virtual ICollection<FileVersion> Versions { get; set; } = new List<FileVersion>();
+    public virtual FileEntity? ParentFile { get; set; }
+    public virtual ICollection<FileEntity> ChildVersions { get; set; } = new List<FileEntity>();
 }

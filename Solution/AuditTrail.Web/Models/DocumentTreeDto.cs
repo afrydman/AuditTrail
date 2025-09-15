@@ -28,5 +28,11 @@ namespace AuditTrail.Web.Models
         public Guid UploadedBy { get; set; }
         public DateTime UploadedDate { get; set; }
         public bool IsDeleted { get; set; }
+        public bool IsCurrentVersion { get; set; }
+        
+        // Enhanced properties for tree display
+        public string UploadedByName { get; set; } = string.Empty;
+        public string OriginalUploaderName { get; set; } = string.Empty;
+        public Guid? ParentFileId { get; set; }
     }
 }

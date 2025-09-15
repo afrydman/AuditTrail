@@ -151,7 +151,11 @@ namespace AuditTrail.Web.Controllers
                     FileId = file.Id,
                     FileSize = file.FileSize,
                     FileExtension = file.FileExtension,
-                    CreatedDate = file.UploadedDate
+                    CreatedDate = file.UploadedDate,
+                    Version = file.Version,
+                    UploadedBy = file.UploadedByName,
+                    OriginalUploader = file.OriginalUploaderName,
+                    IsCurrentVersion = file.IsCurrentVersion
                 });
             }
 
@@ -202,7 +206,11 @@ namespace AuditTrail.Web.Controllers
                     FileId = file.Id,
                     FileSize = file.FileSize,
                     FileExtension = file.FileExtension,
-                    CreatedDate = file.UploadedDate
+                    CreatedDate = file.UploadedDate,
+                    Version = file.Version,
+                    UploadedBy = file.UploadedByName,
+                    OriginalUploader = file.OriginalUploaderName,
+                    IsCurrentVersion = file.IsCurrentVersion
                 });
             }
 
@@ -260,11 +268,54 @@ namespace AuditTrail.Web.Controllers
                     return Json(new { success = false, message = $"Tipo de archivo no permitido: {fileExtension}" });
                 }
 
-                // Upload file to storage
+                // Check if a file with the same name exists in the same category (including deleted files)
+                var existingFiles = await _fileRepository.GetAllAsync();
+                
+                // Find all files with same name and location (including deleted ones) to determine next version
+                var sameNameFiles = existingFiles.Where(f => 
+                    f.CategoryId == categoryId && 
+                    f.FileName.Equals(file.FileName, StringComparison.OrdinalIgnoreCase))
+                    .OrderByDescending(f => f.Version)
+                    .ToList();
+
+                // Find the currently active (non-deleted) file if it exists
+                var currentActiveFile = sameNameFiles.FirstOrDefault(f => !f.IsDeleted && f.IsCurrentVersion);
+                
+                // Determine the next version number based on the highest existing version
+                int newVersion = sameNameFiles.Any() ? sameNameFiles.Max(f => f.Version) + 1 : 1;
+                Guid? parentFileId = null;
+                
+                if (currentActiveFile != null)
+                {
+                    // Mark the current active version as superseded
+                    parentFileId = currentActiveFile.Id;
+                    currentActiveFile.IsCurrentVersion = false;
+                    currentActiveFile.ModifiedDate = DateTime.UtcNow;
+                    currentActiveFile.ModifiedBy = _currentUserService.UserId;
+                    await _fileRepository.UpdateAsync(currentActiveFile);
+                    
+                    _logger.LogInformation("Creating new version {Version} for file: {FileName} (superseding version {OldVersion})", 
+                        newVersion, file.FileName, currentActiveFile.Version);
+                }
+                else if (sameNameFiles.Any())
+                {
+                    // File was previously deleted, continue version numbering
+                    _logger.LogInformation("Creating new version {Version} for file: {FileName} (continuing after deleted versions)", 
+                        newVersion, file.FileName);
+                }
+                else
+                {
+                    // This is the first version of this file
+                    _logger.LogInformation("Creating first version {Version} for file: {FileName}", 
+                        newVersion, file.FileName);
+                }
+
+                // Upload file to storage with version in path
                 string filePath;
                 using (var stream = file.OpenReadStream())
                 {
-                    filePath = await _fileStorageService.UploadFileAsync(stream, file.FileName, file.ContentType);
+                    var versionedFileName = $"{Path.GetFileNameWithoutExtension(file.FileName)}_v{newVersion}{fileExtension}";
+                    filePath = await _fileStorageService.UploadFileAsync(stream, versionedFileName, file.ContentType);
                 }
 
                 // Create file entity
@@ -279,19 +330,28 @@ namespace AuditTrail.Web.Controllers
                     CategoryId = categoryId,
                     UploadedBy = _currentUserService.UserId ?? Guid.Empty,
                     UploadedDate = DateTime.UtcNow,
+                    Version = newVersion,
+                    ParentFileId = parentFileId,
+                    IsCurrentVersion = true,
                     Checksum = "", // TODO: Calculate checksum
                     ChecksumAlgorithm = "SHA256"
                 };
 
                 await _fileRepository.AddAsync(fileEntity);
 
-                _logger.LogInformation("File uploaded successfully: {FileName} by {UserId}", file.FileName, _currentUserService.UserId);
+                var versionMessage = newVersion > 1 
+                    ? $"Nueva versión ({newVersion}) del archivo subida exitosamente" 
+                    : "Archivo subido exitosamente";
+
+                _logger.LogInformation("File uploaded successfully: {FileName} v{Version} by {UserId}", 
+                    file.FileName, newVersion, _currentUserService.UserId);
 
                 return Json(new { 
                     success = true, 
-                    message = "Archivo subido exitosamente",
+                    message = versionMessage,
                     fileId = fileEntity.Id,
-                    fileName = fileEntity.FileName
+                    fileName = fileEntity.FileName,
+                    version = newVersion
                 });
             }
             catch (Exception ex)
@@ -516,10 +576,10 @@ namespace AuditTrail.Web.Controllers
 
                 contents.AddRange(subfolders);
 
-                // Get files
+                // Get files - only current versions
                 var files = await _fileRepository.GetAllAsync();
                 var categoryFiles = files
-                    .Where(f => f.CategoryId == categoryId && !f.IsDeleted)
+                    .Where(f => f.CategoryId == categoryId && !f.IsDeleted && f.IsCurrentVersion)
                     .OrderBy(f => f.FileName)
                     .Select(f => new {
                         id = f.Id,
@@ -635,26 +695,42 @@ namespace AuditTrail.Web.Controllers
         {
             try
             {
-                // Direct query using DTOs to avoid navigation property issues
+                // Direct query using DTOs to avoid navigation property issues - only current versions
+                // Include user names for both current uploader and original uploader (first version)
+                // Simplified query to ensure files are returned - enhance with user names later
                 var files = await _dbContext.Database.SqlQueryRaw<FileEntityDto>(@"
                     SELECT 
-                        FileId as Id,
-                        FileName,
-                        FileExtension,
-                        FilePath,
-                        CategoryId,
-                        Version,
-                        FileSize,
-                        ContentType,
-                        OriginalFileName,
-                        UploadedBy,
-                        UploadedDate,
-                        IsDeleted
-                    FROM [docs].[Files]
-                    WHERE IsDeleted = 0
+                        f.FileId as Id,
+                        f.FileName,
+                        f.FileExtension,
+                        f.FilePath,
+                        f.CategoryId,
+                        f.Version,
+                        f.FileSize,
+                        f.ContentType,
+                        f.OriginalFileName,
+                        f.UploadedBy,
+                        f.UploadedDate,
+                        f.IsDeleted,
+                        f.IsCurrentVersion,
+                        f.ParentFileId,
+                        'Sistema' as UploadedByName,
+                        'Sistema' as OriginalUploaderName
+                    FROM [docs].[Files] f
+                    WHERE f.IsDeleted = 0 AND f.IsCurrentVersion = 1
+                    ORDER BY f.FileName
                 ").ToListAsync();
 
-                _logger.LogInformation("GetFileEntitiesAsync: Retrieved {Count} files using raw SQL", files.Count);
+                _logger.LogInformation("GetFileEntitiesAsync: Retrieved {Count} files from database", files.Count);
+                
+                // Log each file for debugging
+                foreach (var file in files)
+                {
+                    _logger.LogInformation("File: {FileName}, CategoryId: {CategoryId}, Version: {Version}", 
+                        file.FileName, file.CategoryId, file.Version);
+                }
+
+                _logger.LogInformation("GetFileEntitiesAsync: Retrieved {Count} files with user info using raw SQL", files.Count);
                 return files;
             }
             catch (Exception ex)
@@ -926,6 +1002,220 @@ namespace AuditTrail.Web.Controllers
             {
                 _logger.LogError(ex, "Error updating folder permissions for category {CategoryId}, role {RoleId}", categoryId, roleId);
                 return Json(new { success = false, message = "Error al actualizar los permisos" });
+            }
+        }
+
+        // =============================================
+        // PDF VIEWER
+        // =============================================
+
+        [HttpGet]
+        public async Task<IActionResult> ViewPdf(Guid id)
+        {
+            try
+            {
+                var file = await _fileRepository.GetByIdAsync(id);
+                if (file == null)
+                {
+                    return NotFound("Archivo no encontrado");
+                }
+
+                // Check if it's a PDF
+                if (!file.FileExtension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest("El archivo no es un PDF");
+                }
+
+                // Track view event in audit trail
+                _logger.LogInformation("PDF viewed: {FileName} by {UserId}", file.FileName, _currentUserService.UserId);
+                
+                // TODO: Add actual audit trail entry when audit table is available
+                // await _auditService.LogFileAccess(file.Id, "View", _currentUserService.UserId);
+
+                // Get uploader information
+                string uploaderName = "Sistema";
+                if (file.UploadedBy != Guid.Empty)
+                {
+                    var uploader = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == file.UploadedBy);
+                    uploaderName = uploader != null 
+                        ? $"{uploader.FirstName} {uploader.LastName}".Trim() 
+                        : uploader?.Username ?? "Usuario desconocido";
+                }
+                
+                // Get modifier information if available
+                string modifierName = string.Empty;
+                if (file.ModifiedBy.HasValue && file.ModifiedBy.Value != Guid.Empty)
+                {
+                    var modifier = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == file.ModifiedBy.Value);
+                    modifierName = modifier != null 
+                        ? $"{modifier.FirstName} {modifier.LastName}".Trim() 
+                        : modifier?.Username ?? "";
+                }
+                
+                // Get folder path
+                string folderPath = "Raíz";
+                if (file.CategoryId.HasValue)
+                {
+                    var category = await _fileCategoryRepository.GetByIdAsync(file.CategoryId.Value);
+                    folderPath = category?.CategoryPath ?? "Raíz";
+                }
+
+                var viewModel = new PdfViewerViewModel
+                {
+                    FileId = file.Id,
+                    FileName = file.FileName,
+                    FileSize = file.FileSize,
+                    UploadedBy = uploaderName,
+                    UploadedDate = file.UploadedDate,
+                    FilePath = file.FilePath,
+                    ModifiedDate = file.ModifiedDate,
+                    ModifiedBy = modifierName,
+                    Version = file.Version,
+                    FileExtension = file.FileExtension,
+                    ContentType = file.ContentType ?? "application/pdf",
+                    FolderPath = folderPath,
+                    Checksum = file.Checksum ?? "",
+                    IsDeleted = file.IsDeleted
+                };
+
+                return View("PdfViewer", viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error opening PDF viewer for file {FileId}", id);
+                return StatusCode(500, "Error al abrir el visor de PDF");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPdfFile(Guid id)
+        {
+            try
+            {
+                var file = await _fileRepository.GetByIdAsync(id);
+                if (file == null)
+                {
+                    return NotFound("Archivo no encontrado");
+                }
+
+                // Check if file exists in storage
+                if (!await _fileStorageService.FileExistsAsync(file.FilePath))
+                {
+                    return NotFound("Archivo no encontrado en el almacenamiento");
+                }
+
+                // Get file stream
+                var fileStream = await _fileStorageService.DownloadFileAsync(file.FilePath);
+                
+                // Return PDF with proper headers for PDF.js
+                Response.Headers["Accept-Ranges"] = "bytes";
+                return File(fileStream, "application/pdf", file.FileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting PDF file {FileId}", id);
+                return StatusCode(500, "Error al obtener el archivo PDF");
+            }
+        }
+
+        [HttpGet] 
+        public async Task<IActionResult> DownloadFile(Guid id, bool fromViewer = false)
+        {
+            try
+            {
+                var file = await _fileRepository.GetByIdAsync(id);
+                if (file == null)
+                {
+                    return NotFound("Archivo no encontrado");
+                }
+
+                // Check if file exists in storage
+                if (!await _fileStorageService.FileExistsAsync(file.FilePath))
+                {
+                    return NotFound("Archivo no encontrado en el almacenamiento");
+                }
+
+                // Track download event in audit trail
+                _logger.LogInformation("File downloaded: {FileName} by {UserId} (fromViewer: {FromViewer})", 
+                    file.FileName, _currentUserService.UserId, fromViewer);
+                
+                // TODO: Add actual audit trail entry when audit table is available
+                // await _auditService.LogFileAccess(file.Id, "Download", _currentUserService.UserId);
+
+                // Get file stream
+                var fileStream = await _fileStorageService.DownloadFileAsync(file.FilePath);
+                
+                // Force download with Content-Disposition header
+                return File(fileStream, file.ContentType ?? "application/octet-stream", file.FileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error downloading file {FileId}", id);
+                return StatusCode(500, "Error al descargar el archivo");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetFileVersions(Guid fileId)
+        {
+            try
+            {
+                // Get the current file
+                var currentFile = await _fileRepository.GetByIdAsync(fileId);
+                if (currentFile == null)
+                {
+                    return NotFound("Archivo no encontrado");
+                }
+
+                // Get all versions for this file (including the current one and its history)
+                var allFiles = await _fileRepository.GetAllAsync();
+                var versions = new List<FileEntity>();
+
+                // If this file has a parent, get all versions from the root
+                var rootFileId = currentFile.ParentFileId ?? currentFile.Id;
+                
+                // Get the root file and all its versions
+                versions.AddRange(allFiles.Where(f => 
+                    (f.Id == rootFileId || f.ParentFileId == rootFileId) && 
+                    !f.IsDeleted &&
+                    f.FileName.Equals(currentFile.FileName, StringComparison.OrdinalIgnoreCase)
+                ).OrderByDescending(f => f.Version));
+
+                // Create version info objects
+                var versionList = versions.Select(v => new
+                {
+                    id = v.Id,
+                    version = v.Version,
+                    uploadedBy = GetUserFullName(v.UploadedBy),
+                    uploadedDate = v.UploadedDate.ToString("dd/MM/yyyy HH:mm"),
+                    fileSize = FormatFileSize(v.FileSize),
+                    isCurrentVersion = v.IsCurrentVersion,
+                    fileName = v.FileName
+                }).ToList();
+
+                return Json(versionList);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting file versions for {FileId}", fileId);
+                return Json(new List<object>());
+            }
+        }
+
+        private string GetUserFullName(Guid userId)
+        {
+            if (userId == Guid.Empty) return "Sistema";
+            
+            try
+            {
+                var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId);
+                return user != null 
+                    ? $"{user.FirstName} {user.LastName}".Trim() 
+                    : user?.Username ?? "Usuario desconocido";
+            }
+            catch
+            {
+                return "Usuario desconocido";
             }
         }
     }

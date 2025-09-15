@@ -1,0 +1,499 @@
+@model AuditTrail.Web.Models.PdfViewerViewModel
+@{
+    ViewData["Title"] = "Visor PDF - " + Model.FileName;
+    var cacheBuster = "2.0.0";
+}
+
+<div class="pdf-viewer-page">
+    <div class="pdf-viewer-container">
+        <!-- Main PDF Viewer Area -->
+        <div class="pdf-viewer-main">
+            <!-- PDF Header Info -->
+            <div class="pdf-header bg-light border-bottom p-3">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">
+                            <i class="bi bi-file-pdf text-danger"></i>
+                            @Model.FileName
+                        </h5>
+                    </div>
+                    <div class="col-auto">
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- Version Selector -->
+                            <div class="dropdown">
+                                <button class="btn btn-outline-info dropdown-toggle" type="button" id="versionDropdown" data-bs-toggle="dropdown">
+                                    <i class="bi bi-clock-history me-1"></i>
+                                    Versión (@Model.Version)
+                                </button>
+                                <ul class="dropdown-menu" id="versionDropdownMenu">
+                                    <li><span class="dropdown-item-text">Cargando versiones...</span></li>
+                                </ul>
+                            </div>
+                            
+                            <button id="btnToggleSidebar" class="btn btn-outline-secondary" onclick="toggleSidebar()">
+                                <i class="bi bi-layout-sidebar-reverse"></i> Detalles
+                            </button>
+                            <button id="btnDownloadPdf" class="btn btn-primary">
+                                <i class="bi bi-download"></i> Descargar
+                            </button>
+                            <button id="btnClosePdf" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDF.js Viewer -->
+            <div id="pdfViewerContainer" style="position: relative;">
+                <iframe id="pdfViewer" 
+                        src="/lib/pdfjs/web/viewer.html?file=@Url.Action("GetPdfFile", "Documents", new { id = Model.FileId })" 
+                        frameborder="0"
+                        style="width: 100%; height: 100%; border: none; display: block;">
+                </iframe>
+            </div>
+        </div>
+
+        <!-- Right Sidebar with Document Details -->
+        <div class="pdf-viewer-sidebar" id="pdfSidebar">
+            <div class="sidebar-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>Detalles del Documento
+                </h6>
+                <button type="button" class="btn-close btn-sm" onclick="toggleSidebar()"></button>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- File Icon and Name -->
+                <div class="text-center mb-4">
+                    <i class="bi bi-file-pdf text-danger" style="font-size: 3rem;"></i>
+                    <h6 class="mt-2 mb-1">@Model.FileName</h6>
+                    <span class="badge bg-danger">@Model.FileType</span>
+                </div>
+
+                <!-- File Information Section -->
+                <div class="info-section">
+                    <h6 class="section-title">
+                        <i class="bi bi-file-text me-2"></i>Información General
+                    </h6>
+                    <table class="table table-sm info-table">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted">Tamaño:</td>
+                                <td><strong>@Model.FileSizeFormatted</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Tipo:</td>
+                                <td><strong>@Model.FileType</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Extensión:</td>
+                                <td><strong>@Model.FileExtension</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Versión:</td>
+                                <td>
+                                    <strong>v @Model.Version</strong>
+                                    @if (Model.Version > 1)
+                                    {
+                                        <span class="badge bg-info ms-1">Versionado</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Ubicación:</td>
+                                <td><strong>@Model.FolderPath</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Upload Information -->
+                <div class="info-section">
+                    <h6 class="section-title">
+                        <i class="bi bi-clock-history me-2"></i>Historial
+                    </h6>
+                    <table class="table table-sm info-table">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted">Subido por:</td>
+                                <td><strong>@Model.UploadedBy</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Fecha de Carga:</td>
+                                <td><strong>@Model.UploadedDate.ToString("dd/MM/yyyy HH:mm")</strong></td>
+                            </tr>
+                            @if (!string.IsNullOrEmpty(Model.ModifiedBy))
+                            {
+                                <tr>
+                                    <td class="text-muted">Modificado por:</td>
+                                    <td><strong>@Model.ModifiedBy</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Última Modificación:</td>
+                                    <td><strong>@Model.ModifiedDate?.ToString("dd/MM/yyyy HH:mm")</strong></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Technical Details -->
+                @if (!string.IsNullOrEmpty(Model.Checksum))
+                {
+                    <div class="info-section">
+                        <h6 class="section-title">
+                            <i class="bi bi-shield-check me-2"></i>Detalles Técnicos
+                        </h6>
+                        <table class="table table-sm info-table">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted">Checksum:</td>
+                                    <td class="small"><code>@Model.Checksum</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">MIME Type:</td>
+                                    <td><strong>@Model.ContentType</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                <!-- Actions -->
+                <div class="info-section">
+                    <h6 class="section-title">
+                        <i class="bi bi-lightning me-2"></i>Acciones
+                    </h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-info" onclick="showFullAuditTrail('@Model.FileId', '@Model.FileName.Replace("'", "\\'")' )">
+                            <i class="bi bi-clock-history me-2"></i>Ver Historial Completo
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="downloadFile('@Model.FileId')">
+                            <i class="bi bi-download me-2"></i>Descargar Original
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="window.print()">
+                            <i class="bi bi-printer me-2"></i>Imprimir PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Compliance Notice -->
+                <div class="compliance-notice">
+                    <small class="text-muted">
+                        <i class="bi bi-shield-check me-1"></i>
+                        Todas las acciones son registradas según CFR 21 Part 11
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/pdfviewer.css?v=@cacheBuster" />
+}
+
+<script>
+    // PDF.js viewer initialization
+    console.log('PDF viewer page loaded');
+</script>
+
+@section Scripts {
+    <script src="~/js/pdfviewer.js?v=@cacheBuster"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize PDF Viewer
+            PdfViewer.init(
+                '@Model.FileId',
+                '@Model.FileName',
+                '@Url.Action("DownloadFile", "Documents", new { id = Model.FileId, fromViewer = true })'
+            );
+            
+            // Load file versions
+            loadFileVersions('@Model.FileId');
+            
+            // Initialize tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+        
+        function loadFileVersions(fileId) {
+            $.get('@Url.Action("GetFileVersions", "Documents")', { fileId: fileId })
+                .done(function(versions) {
+                    renderVersionDropdown(versions, '@Model.FileId');
+                })
+                .fail(function() {
+                    $('#versionDropdownMenu').html('<li><span class="dropdown-item-text text-danger">Error al cargar versiones</span></li>');
+                });
+        }
+        
+        function renderVersionDropdown(versions, currentFileId) {
+            if (!versions || versions.length === 0) {
+                $('#versionDropdownMenu').html('<li><span class="dropdown-item-text">No hay versiones disponibles</span></li>');
+                return;
+            }
+            
+            let html = '';
+            
+            versions.forEach(version => {
+                const isActive = version.id === currentFileId;
+                const activeClass = isActive ? 'active' : '';
+                const icon = version.isCurrentVersion ? 'bi-star-fill text-warning' : 'bi-clock-history';
+                const label = version.isCurrentVersion ? ' (Actual)' : '';
+                
+                html += `
+                    <li>
+                        <a class="dropdown-item ${activeClass}" href="javascript:void(0)" onclick="switchVersion('${version.id}')">
+                            <div class="d-flex align-items-center">
+                                <i class="bi ${icon} me-2"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">Versión ${version.version}${label}</div>
+                                    <small class="text-muted">
+                                        ${version.uploadedBy} - ${version.uploadedDate}<br>
+                                        ${version.fileSize}
+                                    </small>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                `;
+                
+                if (version !== versions[versions.length - 1]) {
+                    html += '<li><hr class="dropdown-divider"></li>';
+                }
+            });
+            
+            $('#versionDropdownMenu').html(html);
+        }
+        
+        function switchVersion(fileId) {
+            // Redirect to the same viewer but with different file version
+            window.location.href = '@Url.Action("ViewPdf", "Documents")?id=' + fileId;
+        }
+        
+        function toggleSidebar() {
+            $('#pdfSidebar').toggleClass('show');
+            $('.pdf-viewer-main').toggleClass('sidebar-open');
+            
+            // Update button icon
+            const btn = $('#btnToggleSidebar');
+            if ($('#pdfSidebar').hasClass('show')) {
+                btn.html('<i class="bi bi-layout-sidebar"></i> Ocultar');
+            } else {
+                btn.html('<i class="bi bi-layout-sidebar-reverse"></i> Detalles');
+            }
+        }
+        
+        function showFullAuditTrail(fileId, fileName) {
+            // Load the audit trail modal instead of opening new window
+            $.get('@Url.Action("FileAuditTrail", "Documents")')
+                .done(function(response) {
+                    // Remove existing modal if any
+                    if ($('#fileAuditTrailModal').length) {
+                        $('#fileAuditTrailModal').remove();
+                    }
+                    
+                    // Add modal to page
+                    $('body').append(response);
+                    
+                    // Set the file name in the modal
+                    $('#auditFileName').text(fileName);
+                    
+                    // Wait a bit for DOM to be ready, then initialize modal
+                    setTimeout(function() {
+                        try {
+                            // Check if Bootstrap is available
+                            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                                const modalElement = document.getElementById('fileAuditTrailModal');
+                                if (modalElement) {
+                                    const modal = new bootstrap.Modal(modalElement, {
+                                        backdrop: 'static',
+                                        keyboard: false
+                                    });
+                                    modal.show();
+                                    
+                                    // Load audit data for this file after modal is shown
+                                    modal._element.addEventListener('shown.bs.modal', function() {
+                                        if (typeof loadFileAuditData === 'function') {
+                                            loadFileAuditData(fileId);
+                                        }
+                                    });
+                                } else {
+                                    console.error('Modal element not found');
+                                    alert('Error: No se pudo encontrar el modal de auditoría');
+                                }
+                            } else {
+                                console.error('Bootstrap not available - trying jQuery fallback');
+                                // Fallback: try using jQuery's modal if available
+                                const $modal = $('#fileAuditTrailModal');
+                                if ($modal.length && typeof $modal.modal === 'function') {
+                                    $modal.modal({
+                                        backdrop: 'static',
+                                        keyboard: false
+                                    });
+                                    $modal.modal('show');
+                                    
+                                    // Load audit data
+                                    $modal.on('shown.bs.modal', function() {
+                                        if (typeof loadFileAuditData === 'function') {
+                                            loadFileAuditData(fileId);
+                                        }
+                                    });
+                                } else {
+                                    console.error('Neither Bootstrap nor jQuery modal available');
+                                    // Last resort: open in new window
+                                    window.open('@Url.Action("FileAuditTrail", "Documents")?fileId=' + fileId, '_blank');
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error creating modal:', error);
+                            alert('Error al mostrar el modal de auditoría: ' + error.message);
+                        }
+                    }, 100);
+                })
+                .fail(function(xhr, status, error) {
+                    console.error('Failed to load audit modal:', error);
+                    alert('Error al cargar el historial de auditoría: ' + error);
+                });
+        }
+        
+        function downloadFile(fileId) {
+            // Use correct query parameter format
+            window.location.href = '@Url.Action("DownloadFile", "Documents")?id=' + fileId + '&fromViewer=true';
+        }
+        
+        // Helper function to get action URLs
+        function getActionUrl(action, controller) {
+            return '/' + controller + '/' + action;
+        }
+        
+        // Function to load file audit data
+        function loadFileAuditData(fileId) {
+            $('#auditTrailLoading').removeClass('d-none');
+            $('#auditTrailContent, #auditTrailEmpty').addClass('d-none');
+            
+            $.get(getActionUrl('GetFileAuditData', 'Documents'), { fileId: fileId })
+                .done(function(response) {
+                    if (response.success) {
+                        populateFileInfo(response.file);
+                        populateAuditTrail(response.auditTrail);
+                        
+                        $('#auditTrailLoading').addClass('d-none');
+                        
+                        if (response.auditTrail && response.auditTrail.length > 0) {
+                            $('#auditTrailContent').removeClass('d-none');
+                        } else {
+                            $('#auditTrailEmpty').removeClass('d-none');
+                        }
+                    } else {
+                        $('#auditTrailLoading').addClass('d-none');
+                        alert(response.message || 'Error al cargar los datos de auditoría');
+                    }
+                })
+                .fail(function() {
+                    $('#auditTrailLoading').addClass('d-none');
+                    alert('Error al cargar los datos de auditoría');
+                });
+        }
+        
+        // Function to populate file info in audit modal
+        function populateFileInfo(fileInfo) {
+            $('#auditFileNameDetail').text(fileInfo.name);
+            $('#auditFileSize').text(fileInfo.size);
+            $('#auditFileType').text(fileInfo.type);
+            $('#auditUploadedBy').text(fileInfo.uploadedBy);
+            $('#auditUploadedDate').text(fileInfo.uploadedDate);
+            $('#auditFolderPath').text(fileInfo.folderPath);
+        }
+        
+        // Function to populate audit trail table
+        function populateAuditTrail(auditTrail) {
+            const tbody = $('#auditTrailTableBody');
+            tbody.empty();
+            
+            if (!auditTrail || auditTrail.length === 0) {
+                return;
+            }
+            
+            auditTrail.forEach(function(event) {
+                const eventIcon = getEventIcon(event.action);
+                const resultClass = getResultClass(event.result);
+                const resultIcon = getResultIcon(event.result);
+                
+                const row = `
+                    <tr>
+                        <td class="text-nowrap small">
+                            <div>${event.eventDateTime}</div>
+                        </td>
+                        <td class="text-nowrap">
+                            <strong>${event.userName}</strong>
+                        </td>
+                        <td class="text-nowrap">
+                            <i class="bi ${eventIcon} me-1"></i>
+                            <span class="small">${event.action}</span>
+                        </td>
+                        <td class="text-center">
+                            <i class="bi ${resultIcon} ${resultClass}"></i>
+                            <div class="small ${resultClass}">${event.result}</div>
+                        </td>
+                        <td class="audit-detail-cell">
+                            <span class="small">${event.details || '-'}</span>
+                        </td>
+                        <td class="text-nowrap small">
+                            <div>${event.ipAddress || '-'}</div>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        }
+        
+        // Helper functions for audit trail display
+        function getEventIcon(action) {
+            const icons = {
+                'Download': 'bi-download',
+                'Upload': 'bi-upload',
+                'View': 'bi-eye',
+                'Delete': 'bi-trash',
+                'Modify': 'bi-pencil',
+                'Access': 'bi-shield-check'
+            };
+            return icons[action] || 'bi-clock';
+        }
+        
+        function getResultClass(result) {
+            const classes = {
+                'Success': 'text-success',
+                'Failed': 'text-danger',
+                'Warning': 'text-warning'
+            };
+            return classes[result] || 'text-muted';
+        }
+        
+        function getResultIcon(result) {
+            const icons = {
+                'Success': 'bi-check-circle-fill',
+                'Failed': 'bi-x-circle-fill',
+                'Warning': 'bi-exclamation-triangle-fill'
+            };
+            return icons[result] || 'bi-info-circle';
+        }
+        
+        // Function to export audit trail
+        function exportAuditTrail() {
+            alert('Función de exportación en desarrollo');
+        }
+        
+        // PDF.js handles its own loading states, no custom loading indicator needed
+        $(document).ready(function() {
+            console.log('PDF viewer initialized');
+            
+            // Listen for PDF.js communication (optional - for debugging)
+            window.addEventListener('message', function(event) {
+                if (event.data && typeof event.data === 'object') {
+                    console.log('PDF.js message:', event.data);
+                }
+            }, false);
+        });
+    </script>
+}

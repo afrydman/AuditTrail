@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.StaticFiles;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
@@ -44,6 +45,14 @@ builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Configure static files content type provider for PDF.js
+builder.Services.Configure<StaticFileOptions>(options =>
+{
+    var provider = new FileExtensionContentTypeProvider();
+    provider.Mappings[".properties"] = "text/plain";
+    options.ContentTypeProvider = provider;
+});
 
 // Add MudBlazor services
 builder.Services.AddMudServices();
@@ -135,7 +144,18 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseStaticFiles();
+// Configure static files with custom MIME types for PDF.js
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // Add MIME type for .properties files used by PDF.js
+        if (ctx.File.Name.EndsWith(".properties"))
+        {
+            ctx.Context.Response.ContentType = "text/plain";
+        }
+    }
+});
 
 app.UseSession();
 

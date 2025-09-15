@@ -49,6 +49,21 @@ function loadTreeData() {
 
 // Make loadTreeData available globally
 window.loadTreeData = loadTreeData;
+window.refreshTreeData = function() {
+    console.log('Refreshing tree data after file upload...');
+    
+    // Clear cached data
+    treeData = [];
+    originalTreeData = [];
+    
+    // Reload tree data
+    loadTreeData();
+    
+    // If we're currently viewing a folder, refresh its contents too
+    if (currentFolderId) {
+        loadFolderContents(currentFolderId, currentFolderName);
+    }
+};
 
 function renderTree(nodes, parentElement = '#documentTree') {
     if (!nodes || nodes.length === 0) {
@@ -63,12 +78,14 @@ function renderTree(nodes, parentElement = '#documentTree') {
         const expandIcon = hasChildren ? 'bi-chevron-right' : '';
         const nodeIcon = node.isCategory ? 'bi-folder' : node.icon;
         
+        // Simplified rendering - no complex metadata for now
         html += `
             <li class="tree-node" data-node-id="${node.id}">
                 <div class="tree-node-content" onclick="toggleNode('${node.id}')">
                     ${hasChildren ? `<i class="expand-icon bi ${expandIcon}"></i>` : '<span class="expand-spacer"></span>'}
                     <i class="node-icon bi ${nodeIcon} ${node.isCategory ? 'text-warning' : 'text-primary'}"></i>
                     <span class="node-title">${node.title}</span>
+                    ${!node.isCategory && node.version ? `<span class="badge bg-info ms-1">v${node.version}</span>` : ''}
                 </div>
                 ${hasChildren ? `<ul class="tree-children" style="display: none;"></ul>` : ''}
             </li>
@@ -131,17 +148,166 @@ function loadFileDetails(fileId, fileName) {
     // Show file details in the right panel
     $('#welcomeMessage, #folderContents').addClass('d-none');
     $('#fileDetails').removeClass('d-none');
-    $('#fileDetailsTitle').text(fileName);
+    $('#fileDetailsTitle').text('Detalles del Archivo');
+    
+    // Find the file node to get more details
+    const node = findNodeById(treeData, `file_${fileId}`);
+    const isPdf = fileName.toLowerCase().endsWith('.pdf');
+    const fileIcon = node ? node.icon : 'bi-file-earmark';
+    const fileSize = node && node.fileSize ? formatFileSize(node.fileSize) : 'Desconocido';
+    const createdDate = node && node.createdDate ? new Date(node.createdDate).toLocaleString('es-ES') : 'Desconocido';
+    const fileExtension = node ? node.fileExtension : getFileExtension(fileName);
+    
+    // Get file type display name
+    const fileType = getFileTypeName(fileExtension);
+    
+    // Extract version info if available
+    const versionInfo = node ? {
+        version: node.version || 1,
+        uploadedBy: node.uploadedBy || 'Desconocido',
+        originalUploader: node.originalUploader || node.uploadedBy || 'Desconocido'
+    } : { version: 1, uploadedBy: 'Desconocido', originalUploader: 'Desconocido' };
+
     $('#fileDetailsContent').html(`
-        <div class="text-center py-4">
-            <i class="bi bi-file-earmark fs-1 text-muted"></i>
-            <h5 class="mt-3">Vista previa de archivos</h5>
-            <p class="text-muted">La vista previa de archivos estará disponible en una futura actualización.</p>
-            <button class="btn btn-primary" onclick="downloadFile('${fileId}')">
-                <i class="bi bi-download me-2"></i>Descargar
-            </button>
+        <div class="file-details-container">
+            <!-- File Header -->
+            <div class="file-header text-center mb-4">
+                <div class="file-icon-large mb-2">
+                    <i class="bi ${fileIcon} ${isPdf ? 'text-danger' : 'text-primary'}" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="mb-1">${fileName}</h5>
+                <div class="mb-2">
+                    <span class="badge bg-secondary me-1">${fileType}</span>
+                    ${versionInfo.version > 1 ? `<span class="badge bg-info">v${versionInfo.version}</span>` : `<span class="badge bg-secondary">v${versionInfo.version}</span>`}
+                </div>
+            </div>
+            
+            <!-- Two Column Layout -->
+            <div class="row">
+                <!-- Left Column: Actions -->
+                <div class="col-md-5">
+                    <div class="file-actions-section">
+                        <h6 class="text-primary mb-3 border-bottom pb-2">
+                            <i class="bi bi-lightning me-2"></i>Acciones
+                        </h6>
+                        <div class="d-grid gap-2">
+                            ${isPdf ? `
+                            <button class="btn btn-success" onclick="viewPdf('${fileId}')">
+                                <i class="bi bi-eye me-2"></i>Ver PDF
+                            </button>
+                            ` : ''}
+                            <button class="btn btn-primary" onclick="downloadFile('${fileId}')">
+                                <i class="bi bi-download me-2"></i>Descargar
+                            </button>
+                            <button class="btn btn-outline-info" onclick="showFileAuditTrail('${fileId}', '${fileName.replace(/'/g, "\\'")}')">
+                                <i class="bi bi-clock-history me-2"></i>Historial
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteFile('${fileId}')">
+                                <i class="bi bi-trash me-2"></i>Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column: Metadata -->
+                <div class="col-md-7">
+                    <div class="file-metadata-section">
+                        <h6 class="text-primary mb-3 border-bottom pb-2">
+                            <i class="bi bi-info-circle me-2"></i>Información
+                        </h6>
+                        <table class="table table-sm table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted fw-medium" style="width: 45%;">Tipo:</td>
+                                    <td><strong>${fileType}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Tamaño:</td>
+                                    <td><strong>${fileSize}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Versión:</td>
+                                    <td><strong>v${versionInfo.version}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Subido por:</td>
+                                    <td><strong>${versionInfo.uploadedBy}</strong></td>
+                                </tr>
+                                ${versionInfo.uploadedBy !== versionInfo.originalUploader ? `
+                                <tr>
+                                    <td class="text-muted fw-medium">Autor original:</td>
+                                    <td><strong>${versionInfo.originalUploader}</strong></td>
+                                </tr>
+                                ` : ''}
+                                <tr>
+                                    <td class="text-muted fw-medium">Fecha:</td>
+                                    <td><strong>${createdDate}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Extensión:</td>
+                                    <td><code>${fileExtension}</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Additional Options -->
+            <div class="mt-4 pt-3 border-top">
+                <small class="text-muted">
+                    <i class="bi bi-shield-check me-1"></i>
+                    Todas las acciones son registradas en el sistema de auditoría
+                </small>
+            </div>
         </div>
     `);
+    
+    // Initialize tooltips for the new content
+    $('[data-bs-toggle="tooltip"]').tooltip();
+}
+
+function getFileExtension(fileName) {
+    const lastDot = fileName.lastIndexOf('.');
+    return lastDot > -1 ? fileName.substring(lastDot) : '';
+}
+
+function getFileTypeName(extension) {
+    const ext = extension?.toLowerCase();
+    switch(ext) {
+        case '.pdf': return 'PDF';
+        case '.doc':
+        case '.docx': return 'Word';
+        case '.xls':
+        case '.xlsx': return 'Excel';
+        case '.ppt':
+        case '.pptx': return 'PowerPoint';
+        case '.jpg':
+        case '.jpeg':
+        case '.png':
+        case '.gif':
+        case '.bmp': return 'Imagen';
+        case '.mp4':
+        case '.avi':
+        case '.mov':
+        case '.wmv': return 'Video';
+        case '.mp3':
+        case '.wav':
+        case '.flac': return 'Audio';
+        case '.zip':
+        case '.rar':
+        case '.7z': return 'Archivo Comprimido';
+        case '.txt': return 'Texto';
+        default: return 'Archivo';
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
 function findNodeById(nodes, id) {
@@ -241,12 +407,14 @@ function renderFileList(items) {
     
     for (let item of items) {
         const isFolder = item.isFolder === true;
-        const clickHandler = isFolder ? `onclick="loadFolderContents(${item.categoryId}, '${item.name}')"` : '';
-        const rowClass = isFolder ? 'table-row-folder' : '';
+        const clickHandler = isFolder 
+            ? `onclick="loadFolderContents(${item.categoryId}, '${item.name}')"`
+            : `onclick="loadFileDetails('${item.id}', '${item.name}')"`;
+        const rowClass = isFolder ? 'table-row-folder' : 'table-row-file';
         const iconClass = isFolder ? 'text-warning' : 'text-primary';
         
         tbody.append(`
-            <tr data-file-path="${item.filePath || ''}" class="${rowClass}" ${clickHandler} style="${isFolder ? 'cursor: pointer;' : ''}">
+            <tr data-file-path="${item.filePath || ''}" class="${rowClass}" ${clickHandler} style="cursor: pointer;">
                 <td>
                     <div class="form-check">
                         <input class="form-check-input file-checkbox" type="checkbox" value="${item.id}" ${isFolder ? 'disabled' : ''}>
@@ -256,6 +424,9 @@ function renderFileList(items) {
                     <div class="d-flex align-items-center">
                         <i class="bi ${item.icon} ${iconClass} me-2 fs-5"></i>
                         <span>${item.name}</span>
+                        ${!isFolder && item.version && item.version > 1 ? `
+                        <span class="badge bg-info ms-2" data-bs-toggle="tooltip" title="Versión ${item.version} - Última versión">v${item.version}</span>
+                        ` : ''}
                     </div>
                 </td>
                 <td>${item.type}</td>
@@ -264,6 +435,11 @@ function renderFileList(items) {
                 <td class="text-end">
                     ${!isFolder ? `
                     <div class="btn-group btn-group-sm">
+                        ${item.name.toLowerCase().endsWith('.pdf') ? `
+                        <button class="btn btn-outline-success" onclick="viewPdf('${item.id}')" data-bs-toggle="tooltip" title="Ver PDF">
+                            <i class="bi bi-file-pdf"></i>
+                        </button>
+                        ` : ''}
                         <button class="btn btn-outline-primary" onclick="downloadFile('${item.id}')" data-bs-toggle="tooltip" title="Descargar">
                             <i class="bi bi-download"></i>
                         </button>
@@ -414,21 +590,18 @@ function createNewFolder() {
 }
 
 function downloadFile(fileId) {
-    // Find the file path from the current list
-    const fileRow = $(`.file-checkbox[value="${fileId}"]`).closest('tr');
-    if (fileRow.length > 0) {
-        const filePath = fileRow.data('file-path');
-        if (filePath) {
-            window.open(`${getActionUrl('DownloadFile', 'Documents')}?filePath=${encodeURIComponent(filePath)}`, '_blank');
-        } else {
-            showToast('error', 'No se pudo obtener la ruta del archivo');
-        }
-    }
+    // Download file using the file ID - use query parameter format
+    window.open(`${getActionUrl('DownloadFile', 'Documents')}?id=${fileId}`, '_blank');
 }
 
 function viewFile(fileId) {
     // For now, just download the file
     downloadFile(fileId);
+}
+
+function viewPdf(fileId) {
+    // Open PDF viewer in a new tab
+    window.open(`${getActionUrl('ViewPdf', 'Documents')}/${fileId}`, '_blank');
 }
 
 function editFile(fileId) {

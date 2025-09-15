@@ -1,5 +1,5 @@
 /* Documents Management Styles */
-/* Version: 1.0.0 */
+/* Version: 1.2.0 */
 
 .tree-container {
     max-height: 600px;
@@ -52,6 +52,124 @@
 .tree-children {
     margin-left: 20px;
     border-left: 1px dashed #dee2e6;
+}
+
+/* Enhanced file metadata display in tree */
+.file-metadata {
+    padding: 2px 0;
+    margin-left: 28px;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.file-metadata .badge {
+    font-size: 0.65rem;
+    margin-right: 4px;
+}
+
+.file-metadata small {
+    line-height: 1.2;
+}
+
+/* Enhanced file details layout */
+.file-details-container {
+    padding: 0;
+}
+
+.file-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #dee2e6;
+}
+
+.file-header h5 {
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.5rem;
+}
+
+.file-header .badge {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 0.375rem;
+}
+
+/* Action and metadata sections */
+.file-actions-section,
+.file-metadata-section {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.25rem;
+    height: 100%;
+}
+
+.file-actions-section h6,
+.file-metadata-section h6 {
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    margin-bottom: 1rem;
+}
+
+.file-actions-section .btn {
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.file-actions-section .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+}
+
+.file-metadata-section .table td {
+    padding: 0.6rem 0.75rem;
+    vertical-align: middle;
+    border: none;
+}
+
+.file-metadata-section .table td:first-child {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.file-metadata-section .table td:last-child {
+    font-weight: 600;
+    color: #212529;
+}
+
+.file-metadata-section code {
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+/* Enhanced tree typography */
+.tree-node-content {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.tree-node-content .node-title {
+    color: #495057;
+    transition: color 0.2s ease;
+}
+
+.tree-node-content:hover .node-title {
+    color: #212529;
+}
+
+/* Badge improvements */
+.badge {
+    font-weight: 600;
+    letter-spacing: 0.025em;
 }
 
 .file-checkbox:checked ~ * {
@@ -266,5 +384,94 @@
     
     .table-row-folder:hover {
         background-color: rgba(255, 193, 7, 0.3) !important;
+    }
+}
+
+/* File Details Panel Styles */
+.file-details-container {
+    padding: 1rem;
+}
+
+.file-icon-large {
+    margin: 0 auto;
+    display: inline-block;
+}
+
+.file-info-section {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.file-info-section table {
+    margin-bottom: 0;
+}
+
+.file-info-section table td {
+    padding: 0.5rem 0.75rem;
+    border: none;
+}
+
+.file-info-section table tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.file-actions-section {
+    padding: 1rem 0;
+}
+
+.file-actions-section .btn {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.file-actions-section .btn:hover {
+    transform: translateX(5px);
+}
+
+.file-actions-section .btn i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Card styling for file details */
+#fileDetails .card {
+    border: 1px solid #dee2e6;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+}
+
+#fileDetails .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem;
+}
+
+#fileDetails .card-body {
+    padding: 0;
+}
+
+/* File type badge styling */
+.badge.bg-secondary {
+    font-weight: normal;
+    padding: 0.35em 0.65em;
+    font-size: 0.875rem;
+}
+
+/* Responsive adjustments for file details */
+@media (max-width: 768px) {
+    .file-details-container {
+        padding: 0.5rem;
+    }
+    
+    .file-actions-section .btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .file-info-section table td {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.9rem;
     }
 }

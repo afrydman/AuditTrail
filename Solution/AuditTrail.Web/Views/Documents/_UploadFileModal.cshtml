@@ -173,9 +173,13 @@
                 modal.hide();
                 
                 // Refresh the tree and folder contents
-                loadTreeData();
-                if (currentFolderId) {
-                    loadFolderContents(currentFolderId, 'Carpeta actual');
+                if (typeof refreshTreeData === 'function') {
+                    refreshTreeData();
+                } else {
+                    loadTreeData();
+                    if (currentFolderId) {
+                        loadFolderContents(currentFolderId, 'Carpeta actual');
+                    }
                 }
             } else {
                 showUploadError(response.message);

@@ -26,5 +26,11 @@ namespace AuditTrail.Web.Models
         public long? FileSize { get; set; }
         public string? FileExtension { get; set; }
         public DateTime? CreatedDate { get; set; }
+        
+        // Enhanced file properties for version info and uploaders
+        public int? Version { get; set; }
+        public string? UploadedBy { get; set; }
+        public string? OriginalUploader { get; set; }
+        public bool? IsCurrentVersion { get; set; }
     }
 }
